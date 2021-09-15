@@ -74,7 +74,8 @@ biomet.long %>%
   facet_grid(variable~., scales="free_y")
 
 # plot wind variables in windrose
-plot.windrose(biomet,biomet$WS_33_16_1_1_1,biomet$WD_35_20_1_1_1)
+plot.windrose(biomet,biomet$WS_16_33_1_1_1,biomet$WD_20_35_1_1_1)
+
 
 # plot PAR and air temperature
 biomet.long %>%
