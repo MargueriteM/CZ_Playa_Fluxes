@@ -89,7 +89,7 @@ biomet.long %>%
 #"SWIN_10_6_1_1_1"   "SWOUT_11_6_1_1_1"  "LWIN_14_6_1_1_1"   "LWOUT_15_6_1_1_1" 
 # [11] "RN_5_6_1_1_1"      "RN_4_6_1_1_1"      "ALB_26_99_1_1_1" 
 biomet.long %>%
-  filter(str_detect(variable,"^SWIN|^SWOUT|^LWIN|^LWOUT|^RN|^ALB|^PPFD")) %>%
+  filter(str_detect(variable,"^SWIN|^SWOUT|^LWIN|^LWOUT|^RN|^RG|^ALB|^PPFD")) %>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
