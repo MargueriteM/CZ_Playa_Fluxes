@@ -2,6 +2,7 @@
 
 # load libraries
 library(tidyr)
+library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(stringr)
@@ -104,7 +105,6 @@ biomet.long %>%
   facet_grid(variable~., scales="free_y")
 
 # precipitation, relative humidity, leaf wetness
-# plot all SWC variables
 biomet.long %>%
   filter(str_detect(variable,"^P_RAIN|^RH|^LWS")) %>%
   ggplot(., aes(TIMESTAMP, value))+
