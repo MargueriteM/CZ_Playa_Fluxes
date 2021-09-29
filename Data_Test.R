@@ -66,6 +66,15 @@ biomet.long %>%
   geom_line()+
   facet_grid(variable~., scales="free_y")
 
+# plot air temperature and canopy temperature
+biomet.long %>%
+  filter(str_detect(variable,"^TA|^TC")) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
+
+
 # plot all wind variables
 biomet.long %>%
   filter(str_detect(variable,"^WD|^WS|^MWS")) %>%
