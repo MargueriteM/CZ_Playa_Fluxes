@@ -44,7 +44,7 @@ flux.data <- do.call("rbind", lapply(flux.files, header = FALSE, read.table, sep
 detach("package:plyr", unload=TRUE)
 
 
-# try from summaries folder
+# try from summaries folder (this seems more buggy than the eddypro outputs..... files have mis-matching columns. Not sure why?!)
 flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/CZ_Drylands/JER_RedLakePlaya/Data/EddyCovariance_SmartFlux/summaries",full.names=TRUE)
 
 # read the flux files as csv and combine into single dataframe
