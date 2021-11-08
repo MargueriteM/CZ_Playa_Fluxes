@@ -1,0 +1,87 @@
+---
+title: "Red Lake Biomet Data Check"
+author: "Marguerite Mauritz"
+date: "11/8/2021"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+# load libraries
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(stringr)
+library(data.table)
+
+# get windrose function
+source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
+
+# set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
+setwd("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
+
+# read column names and import data
+biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
+biomet <- read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=4, header=FALSE,
+                     col.names=biomet.head, na.strings=c("NAN"))
+
+# change data to long format
+biomet.long <- biomet %>%
+  pivot_longer(!c(TIMESTAMP,RECORD), names_to="variable",values_to="value") %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP),
+         date=as.Date(TIMESTAMP))
+```
+
+Column {.sidebar}
+---------------------------------------
+
+###Select Date Range and variables
+
+These graphs show most recent incoming Biomet data from the tower at Red Lake Playa. Data are 30min mean values.
+
+**Note: Flux calculations are preliminary and for visualisation only!!** 
+
+#### Last timestamp data updated:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+print(max(biomet.long$TIMESTAMP))
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+
+radioButtons("variable1", "Biomet variables:",
+             c("Soil Moisture" = "^SWC"))
+
+radioButtons("variable2", "Axis scales:",
+             c("Fixed" = "fixed", 
+               "Free x" = "free_x",
+               "Free y" = "free_y",
+               "Free x & y" = "free"))
+```
+
+Column
+-------------------------------------------------------------
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+  renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable1) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs( y=input$variable1)+
+    facet_grid(variable~., scales = input$variable2)+
+ theme_bw()})
+```
