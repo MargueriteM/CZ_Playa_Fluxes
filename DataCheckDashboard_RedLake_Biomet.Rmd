@@ -37,18 +37,49 @@ plot.titles <- data.frame(selection1 = c("^PA",
                                     "^SWC",
                                     "^TS",
                                     "^TA",
-                                    "^TC"),
+                                    "^TC",
+                                     "^SWIN|^SWOUT",
+                                    "^RG|^PPFD",
+                                    "^RN"),
                           selection2 = c("^PA",
                                     "^SWC",
                                     "^TS",
                                     "^TA",
-                                    "^TC"),
+                                    "^TC",
+                                     "^SWIN|^SWOUT",
+                                    "^RG|^PPFD",
+                                    "^RN"),
+                          selection3 = c("^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC",
+                                     "^SWIN|^SWOUT",
+                                    "^RG|^PPFD",
+                                    "^RN"),
                           name = c("Atmospheric Pressure",
                           "Soil Moisture Content (% VWC)",
                           "Soil Temperature (C)",
                           "Air Temperature (C)",
-                          "Canopy Temperature (C)"))
+                          "Canopy Temperature (C)",
+                          "Shortwave Radiation",
+                          "Global Radiation & PAR",
+                          "Net Radiation"))
 ```
+
+# Welcome
+
+### Welcome!
+#### This dashboard shows data collected by the Dryland Critical Zone Project at Red Lake Playa.
+
+```{r site pic, out.width='100%', out.height='100%'}
+# This picture is found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa
+# this code will run best if the picture is saved in the same project folder as this .Rmd file
+# If it's causing trouble, comment out thee knitr:: line below and run without the image
+knitr::include_graphics("20211023_RedLake_SiteView.jpg")
+```
+
+# Plot any variables
 
 Column {.sidebar}
 ---------------------------------------
@@ -80,14 +111,28 @@ selectInput("variable1", "Biomet variable 1:",
                "Soil Moisture" = "^SWC",
                "Air Temperature" = "^TA",
                "Soil Temperature" = "^TS",
-               "Canopy Temperature" ="^TC"))
+               "Canopy Temperature" ="^TC",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
 
 selectInput("variable2", "Biomet variable 2:",
              c("Atmospheric Pressure" = "^PA",
                "Soil Moisture" = "^SWC",
                "Air Temperature" = "^TA",
                "Soil Temperature" = "^TS",
-               "Canopy Temperature" ="^TC"))
+               "Canopy Temperature" ="^TC",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+selectInput("variable3", "Radiation Components:",
+            c("Longwave Radiation" = "^LWIN|^LWOUT",
+              "Shortwave Radiation" = "^SWIN|^SWOUT",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
 
 radioButtons("ax.scales", "Axis scales:",
              c("Fixed" = "fixed", 
@@ -132,5 +177,32 @@ renderPlot({
     labs(title = d$name, y=d$name)+
     facet_grid(variable~., scales = input$ax.scales)+
  theme_bw()})
+
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable3) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection3 == input$variable3)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+       facet_grid(input$variable3~.)+
+ theme_bw()+
+       theme(legend.position = "bottom")})
+
 ```
 
+# Show Windrose
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+  
+renderPlot({
+# plot wind variables in windrose
+plot.windrose(biomet,biomet$WS_16_33_1_1_1,biomet$WD_20_35_1_1_1)
+})
+```
