@@ -31,6 +31,23 @@ biomet.long <- biomet %>%
   pivot_longer(!c(TIMESTAMP,RECORD), names_to="variable",values_to="value") %>%
   mutate(TIMESTAMP = ymd_hms(TIMESTAMP),
          date=as.Date(TIMESTAMP))
+
+# create nicer plot titles
+plot.titles <- data.frame(selection1 = c("^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC"),
+                          selection2 = c("^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC"),
+                          name = c("Atmospheric Pressure",
+                          "Soil Moisture Content (% VWC)",
+                          "Soil Temperature (C)",
+                          "Air Temperature (C)",
+                          "Canopy Temperature (C)"))
 ```
 
 Column {.sidebar}
@@ -58,10 +75,21 @@ dateRangeInput("daterange", "Date range:",
                  min = min(biomet.long$date),
                  max = max(biomet.long$date))
 
-radioButtons("variable1", "Biomet variables:",
-             c("Soil Moisture" = "^SWC"))
+selectInput("variable1", "Biomet variable 1:",
+             c("Atmospheric Pressure" = "^PA",
+               "Soil Moisture" = "^SWC",
+               "Air Temperature" = "^TA",
+               "Soil Temperature" = "^TS",
+               "Canopy Temperature" ="^TC"))
 
-radioButtons("variable2", "Axis scales:",
+selectInput("variable2", "Biomet variable 2:",
+             c("Atmospheric Pressure" = "^PA",
+               "Soil Moisture" = "^SWC",
+               "Air Temperature" = "^TA",
+               "Soil Temperature" = "^TS",
+               "Canopy Temperature" ="^TC"))
+
+radioButtons("ax.scales", "Axis scales:",
              c("Fixed" = "fixed", 
                "Free x" = "free_x",
                "Free y" = "free_y",
@@ -70,18 +98,39 @@ radioButtons("variable2", "Axis scales:",
 
 Column
 -------------------------------------------------------------
+Graph two different variables in parallel
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-  renderPlot({
+  
+renderPlot({
     c <-  biomet.long %>%
   filter(str_detect(variable,input$variable1) &
            (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
   
-   # setnames(c,input$variable1,"selected")
+   d <- plot.titles %>%
+     filter(selection1 == input$variable1)
+    # setnames(c,input$variable1,"selected")
  
     # plot
      ggplot(c, aes(TIMESTAMP, value))+
     geom_line()+
-    labs( y=input$variable1)+
-    facet_grid(variable~., scales = input$variable2)+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()})
+
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable2) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection2 == input$variable2)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
  theme_bw()})
 ```
+
