@@ -13,6 +13,7 @@ library(ggplot2)
 library(lubridate)
 library(stringr)
 library(data.table)
+library(gridExtra)
 
 # get windrose function
 source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
@@ -110,6 +111,27 @@ biomet.long %>%
   geom_point()+
   geom_line()+
   facet_grid(variable~., scales="free_y")
+
+# graph radiation with nice overlaps
+plot.sw <- biomet.long %>%
+  filter(str_detect(variable,"^SWIN|^SWOUT")) %>%
+  ggplot(., aes(TIMESTAMP, value, colour=variable))+
+  geom_point()+
+  geom_line()
+
+plot.lw <- biomet.long %>%
+  filter(str_detect(variable,"^LWIN|^LWOUT")) %>%
+  ggplot(., aes(TIMESTAMP, value, colour=variable))+
+  geom_point()+
+  geom_line()
+
+plot.netR <- biomet.long %>%
+  filter(str_detect(variable,"^RN|^RG|^PPFD")) %>%
+  ggplot(., aes(TIMESTAMP, value, colour=variable))+
+  geom_point()+
+  geom_line()
+
+grid.arrange(plot.sw, plot.lw, plot.netR)
 
 # plot soil heat flux
 biomet.long %>%
