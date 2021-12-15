@@ -15,8 +15,9 @@ library(lubridate)
 library(stringr)
 library(data.table)
 
-# get windrose function
-source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
+# get windrose function, source directly from Github
+#source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
+source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
 setwd("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
