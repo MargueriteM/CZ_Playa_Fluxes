@@ -84,11 +84,13 @@ plot.titles <- data.frame(selection1 = c("^PA",
 ### Welcome!
 #### This dashboard shows data collected by the Dryland Critical Zone Project at Red Lake Playa.
 
-```{r site pic, out.width='100%', out.height='100%'}
+Optional Photo display: found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa: 20211023_RedLake_SiteView.jpg
+
+```{r site pic, out.width='100%', out.height='100%', echo=TRUE}
 # This picture is found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa
 # this code will run best if the picture is saved in the same project folder as this .Rmd file
 # If it's causing trouble, comment out thee knitr:: line below and run without the image
-knitr::include_graphics("20211023_RedLake_SiteView.jpg")
+# knitr::include_graphics("20211023_RedLake_SiteView.jpg")
 ```
 
 # Plot any variables
