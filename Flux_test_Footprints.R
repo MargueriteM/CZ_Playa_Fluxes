@@ -7,13 +7,12 @@ library(stringr)
 library(data.table)
 library(plyr)
 
-# get windrose function
-source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
+# get windrose function from github
+source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
 
-
- setwd("~/Desktop/OneDrive - University of Texas at El Paso/CZ_Drylands/JER_RedLakePlaya/Data/SmartFlux/results/2021/09")
+# working directory (don't need to set, all file reads have full path)
+# setwd("~/Desktop/OneDrive - University of Texas at El Paso/CZ_Drylands/JER_RedLakePlaya/Data/SmartFlux/results/2021/09")
 #
-
 
 # get data from summaries folder
 flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries",full.names=TRUE)
