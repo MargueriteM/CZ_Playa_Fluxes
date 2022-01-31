@@ -68,6 +68,7 @@ ggplot(flux.data2, aes(date_time, `u*`))+geom_point()
 
 ggplot(flux.data2, aes(`u*`, `x_90%`))+geom_point()
 
+# filter to keeep only data under turbulent conditions and remove NAs
 flux.data2 %>%
   filter(`u*`>0.2) %>%
 ggplot(., aes(date_time, `x_90%`))+
@@ -79,7 +80,9 @@ footprint.data <- flux.data2 %>%
   filter(`u*`>0.2) %>%
   drop_na
 
+# use windrose function to make a footprint graph: ... it's a hack.
 plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=500,spdres=50)
 
-plot.foot <- plot.windrose
-plot.foot
+# histogram of footprint distance
+ggplot(footprint.data, aes(`x_90%`))+geom_histogram()
+
