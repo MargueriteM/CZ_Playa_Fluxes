@@ -47,7 +47,19 @@ flux.data2 <- flux.data2 %>%
   mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
 
 # make some quick graphs
-ggplot(flux.data2, aes(date_time, co2_flux))+geom_point()
+flux.data2 %>%
+  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2) %>%
+  ggplot(., aes(date_time, co2_flux))+
+  geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)+
+  geom_line(size=0.1)
+
+flux.data2 %>%
+  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+ggplot(., aes(date_time, w_rot))+geom_line()
+
+ggplot(flux.data2, aes(date_time, v_rot))+geom_point()
+ggplot(flux.data2, aes(date_time, w_rot))+geom_point()
+
 
 ggplot(flux.data2, aes(date_time, WD_1_1_1))+geom_point()
 
@@ -81,7 +93,7 @@ footprint.data <- flux.data2 %>%
   drop_na
 
 # use windrose function to make a footprint graph: ... it's a hack.
-plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=500,spdres=50)
+plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=1000,spdres=100)
 
 # histogram of footprint distance
 ggplot(footprint.data, aes(`x_90%`))+geom_histogram()

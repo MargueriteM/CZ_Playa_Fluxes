@@ -133,6 +133,15 @@ plot.netR <- biomet.long %>%
 
 grid.arrange(plot.sw, plot.lw, plot.netR)
 
+# plot PAR vs Global
+# PPFD_7_21_1_1_1, SWIN_6_10_1_1_1, RG_6_4_1_1_1
+ggplot(biomet, aes(RG_6_4_1_1_1,PPFD_7_21_1_1_1*0.327))+
+  geom_point()
+
+# AND PAR vs SW In
+ggplot(biomet, aes(SWIN_6_10_1_1_1,PPFD_7_21_1_1_1*0.327))+
+  geom_point()
+
 # plot soil heat flux
 biomet.long %>%
   filter(str_detect(variable,"^SHF")) %>%
