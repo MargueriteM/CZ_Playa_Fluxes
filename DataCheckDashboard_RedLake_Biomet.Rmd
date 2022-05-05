@@ -199,7 +199,9 @@ renderPlot({
     labs(title = d$name, y=d$name)+
     facet_grid(variable~., scales = input$ax.scales)+
  theme_bw()})
-
+```
+Graph Radiation Components Only
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 renderPlot({
     c <-  biomet.long %>%
   filter(str_detect(variable,input$variable3) &
