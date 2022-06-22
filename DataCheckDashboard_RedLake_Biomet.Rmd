@@ -99,7 +99,7 @@ Optional Photo display: found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa: 20
 Column {.sidebar}
 ---------------------------------------
 
-###Select Date Range and variables
+### Select Date Range and variables
 
 These graphs show most recent incoming Biomet data from the tower at Red Lake Playa. Data are 30min mean values.
 
@@ -123,10 +123,11 @@ dateRangeInput("daterange", "Date range:",
 
 selectInput("variable1", "Biomet variable 1:",
              c("Atmospheric Pressure" = "^PA",
-               "Soil Moisture" = "^SWC",
                "Air Temperature" = "^TA",
-               "Soil Temperature" = "^TS",
                "Canopy Temperature" ="^TC",
+               "Soil Temperature" = "^TS",
+               "Soil Moisture" = "^SWC",
+               "Soil Heat Flux" ="^SHF",
                "Rainfall" =  "^P_RAIN",
                "Leaf wetness" = "^LWS",
                "Longwave Radiation" = "^LWIN|^LWOUT",
@@ -137,10 +138,11 @@ selectInput("variable1", "Biomet variable 1:",
 
 selectInput("variable2", "Biomet variable 2:",
              c("Atmospheric Pressure" = "^PA",
-               "Soil Moisture" = "^SWC",
                "Air Temperature" = "^TA",
-               "Soil Temperature" = "^TS",
                "Canopy Temperature" ="^TC",
+               "Soil Temperature" = "^TS",
+               "Soil Moisture" = "^SWC",
+               "Soil Heat Flux" ="^SHF",
                "Rainfall" =  "^P_RAIN",
                "Leaf wetness" = "^LWS",
                "Longwave Radiation" = "^LWIN|^LWOUT",
@@ -152,7 +154,8 @@ selectInput("variable2", "Biomet variable 2:",
 selectInput("variable3", "Radiation Components:",
             c("Longwave Radiation" = "^LWIN|^LWOUT",
               "Shortwave Radiation" = "^SWIN|^SWOUT",
-               "Albedo" = "^ALB",
+              "Soil Heat Flux" ="^SHF", 
+              "Albedo" = "^ALB",
               "Global Radiation & PAR" = "^RG|^PPFD",
               "Net Radiation" = "^RN"))
 
@@ -221,12 +224,171 @@ renderPlot({
 
 ```
 
-# Show Windrose
+# Show Windrose (2-D Anemometer)
 
+Column {.sidebar}
+---------------------------------------
+
+Select Date Range for Wind Rose
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange2", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+```
+
+Column
+-------------------------------------------------------------
+Wind Rose from 2-D Wind Anemometer
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-  
 renderPlot({
+wind.data <-  biomet %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP),
+         date=as.Date(TIMESTAMP))%>%
+  filter((date >= input$daterange2[[1]] & date <= input$daterange2[[2]])) 
 # plot wind variables in windrose
-plot.windrose(biomet,biomet$WS_16_33_1_1_1,biomet$WD_20_35_1_1_1)
+plot.windrose(wind.data,wind.data$WS_16_33_1_1_1,wind.data$WD_20_35_1_1_1)
 })
+```
+
+# Focus on Soil Data
+
+Column {.sidebar}
+---------------------------------------
+
+### Select Date Range and variables
+
+These graphs show most recent incoming Biomet data from the tower at Red Lake Playa. Data are 30min mean values.
+
+**Note: Flux calculations are preliminary and for visualisation only!!** 
+
+#### Last timestamp data updated:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+print(max(biomet.long$TIMESTAMP))
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange3", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+
+selectInput("variable4", "Biomet variable:",
+             c("Atmospheric Pressure" = "^PA",
+               "Air Temperature" = "^TA",
+               "Canopy Temperature" ="^TC",
+               "Rainfall" =  "^P_RAIN",
+               "Leaf wetness" = "^LWS",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+               "Albedo" = "^ALB",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+selectInput("variable5", "Soil variable 1:",
+             c("All Soil Temperature Profile" = "^TS_2_38_1",
+               "All Soil Temperature Integrated (0.5-15cm)" = "^TS_2_38_2|^TS_2_38_3",
+               "All Soil Moisture Profile" = "^SWC",
+               "All Soil Heat Flux (16cm)" ="^SHF",
+               "Soil Temperature 10cm" ="^TS_2_38_1_1_1",
+               "Soil Temperature 20cm" ="^TS_2_38_1_2_1",
+               "Soil Temperature 31cm" ="^TS_2_38_1_3_1",
+               "Soil Temperature 49cm" ="^TS_2_38_1_4_1",
+               "Soil Temperature 93cm" ="^TS_2_38_1_5_1",
+               "Soil Moisture 10cm" ="^SWC_12_36_1_1_1",
+               "Soil Moisture 20cm" ="^SWC_12_36_1_2_1",
+               "Soil Moisture 31cm" ="^SWC_12_36_1_3_1",
+               "Soil Moisture 49cm" ="^SWC_12_36_1_4_1",
+               "Soil Moisture 93cm" ="^SWC_12_36_1_5_1"))
+
+selectInput("variable6", "Soil Variable 2:",
+            c("All Soil Temperature Profile" = "^TS_2_38_1",
+               "All Soil Temperature Integrated (0.5-15cm)" = "^TS_2_38_2|^TS_2_38_3",
+               "All Soil Moisture Profile" = "^SWC",
+               "All Soil Heat Flux (16cm)" ="^SHF",
+              "Soil Temperature 10cm" ="^TS_2_38_1_1_1",
+               "Soil Temperature 20cm" ="^TS_2_38_1_2_1",
+               "Soil Temperature 31cm" ="^TS_2_38_1_3_1",
+               "Soil Temperature 49cm" ="^TS_2_38_1_4_1",
+               "Soil Temperature 93cm" ="^TS_2_38_1_5_1",
+              "Soil Moisture 10cm" ="^SWC_12_36_1_1_1",
+               "Soil Moisture 20cm" ="^SWC_12_36_1_2_1",
+               "Soil Moisture 31cm" ="^SWC_12_36_1_3_1",
+               "Soil Moisture 49cm" ="^SWC_12_36_1_4_1",
+               "Soil Moisture 93cm" ="^SWC_12_36_1_5_1"))
+
+radioButtons("ax.scales", "Axis scales:",
+             c("Fixed" = "fixed", 
+               "Free x" = "free_x",
+               "Free y" = "free_y",
+               "Free x & y" = "free"))
+```
+
+Column
+-------------------------------------------------------------
+Graph Met and Soil Variables in Parallel  
+Profile measurements are at 10, 20, 31, 49, 93cm
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+# biomet plot
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable4) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable4)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()})
+
+# soil plot 1
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable5) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable5)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()+
+       theme(legend.position="bottom")})
+
+# soil plot 2
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable6) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable5)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+       facet_grid(input$variable3~.)+
+ theme_bw()+
+           facet_grid(variable~., scales = input$ax.scales)+
+       theme(legend.position = "bottom")})
+
 ```
