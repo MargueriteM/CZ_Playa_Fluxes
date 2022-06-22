@@ -6,6 +6,7 @@ library(lubridate)
 library(stringr)
 library(data.table)
 library(plyr)
+library(cowplot)
 
 # get windrose function from github
 source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
@@ -31,7 +32,7 @@ data1 <- ldply(flux.files2[1:150], read_column_number)
 data2 <- ldply(flux.files2[151:167], read_column_number)
 
 # issue with files between 167-174 (zero KB files)
-data3 <- ldply(flux.files2[174:214], read_column_number)
+data3 <- ldply(flux.files2[174:233], read_column_number)
 
 data <- rbind(data1, data2, data3)
 
@@ -123,20 +124,23 @@ wind.dat <- flux.data2%>%
 select(date_time,WS_1_1_1,WD_1_1_1, wind_speed, wind_dir)%>%
   drop_na()
 
-plot.windrose(wind.dat,
+wind.2d <- plot.windrose(wind.dat,
               wind.dat$WS_1_1_1,
               wind.dat$WD_1_1_1)+
   theme_bw()+
   labs(title="2-D Anemometer")
 
 # 
-plot.windrose(wind.dat,
+wind.3d <- plot.windrose(wind.dat,
               wind.dat$wind_speed,
               wind.dat$wind_dir)+
   theme_bw()+
   labs(title="Sonic Anemometer")
 
+# graph 2-D and Sonic Wind Rose side-by-side
+plot_grid(wind.2d,wind.3d,labels=c("A","B"))
 
+# graph single variables
 ggplot(flux.data2, aes(date_time, v_rot))+geom_point()
 ggplot(flux.data2, aes(date_time, w_rot))+geom_point()
 
@@ -169,13 +173,13 @@ ggplot(flux.data2, aes(date_time, `u*`))+geom_point()
 
 ggplot(flux.data2, aes(`u*`, `x_90%`))+geom_point()
 
-# filter to keeep only data under turbulent conditions and remove NAs
+# filter to keep only data under turbulent conditions and remove NAs
 flux.data2 %>%
   filter(`u*`>0.2) %>%
 ggplot(., aes(date_time, `x_90%`))+
   geom_line()
 
-# use windrose to plot 
+# use windrose to plot footprints
 footprint.data <- flux.data2 %>%
   select(date_time,WD_1_1_1,`u*`,`x_90%`,`x_70%`,`x_50%`,`x_30%`,`x_10%`)%>%
   filter(`u*`>0.2) %>%
