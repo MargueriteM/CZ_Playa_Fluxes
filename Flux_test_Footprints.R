@@ -25,8 +25,15 @@ read_column_number <- function(colname){
   out
 }
 
-data <- ldply(flux.files2, read_column_number)
+# split into 2 because reading all at once is too big
+data1 <- ldply(flux.files2[1:150], read_column_number)
 
+data2 <- ldply(flux.files2[151:167], read_column_number)
+
+# issue with files between 167-174 (zero KB files)
+data3 <- ldply(flux.files2[174:214], read_column_number)
+
+data <- rbind(data1, data2, data3)
 
 # read the flux files as csv and combine into single dataframe
 
@@ -46,16 +53,89 @@ flux.data2 <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE,
 flux.data2 <- flux.data2 %>%
   mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
 
-# make some quick graphs
+# graph flux and u*
 flux.data2 %>%
-  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2) %>%
+  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2) %>%
+  ggplot(., aes(`u*`, co2_flux))+
+  geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)
+  
+
+# make some quick graphs
+# flux
+flux.data2 %>%
+  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
   ggplot(., aes(date_time, co2_flux))+
   geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)+
-  geom_line(size=0.1)
+  geom_line(size=0.1)+
+  labs(y=expression("Half-hourly NEE (μmol C" *O[2]*" "*m^-2* "se" *c^-1*")"),
+       x = "Month")+
+  theme_bw()+
+  theme(legend.position="bottom")
+
+# co2 mol fraction
+flux.data2 %>%
+  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
+  ggplot(., aes(date_time, co2_mole_fraction))+
+  geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)+
+  geom_line(size=0.1)+
+  labs(y=expression("C" *O[2]*" Mole Fraction (μmol mo"*l^-1*")"),
+       x = "Month")+
+  theme_bw()+
+  theme(legend.position="bottom")
+
+#LE graphs
+flux.data2 %>%
+  filter(qc_LE<2 & `u*`>0.2) %>%
+  ggplot(., aes(date_time, (LE/2454000)*1800))+
+  geom_point(aes(colour = factor(qc_LE)), size=0.25)+
+  geom_line(size=0.1)+
+  labs(y=expression("Half-hourly ET (mm" *m^-2* "se" *c^-1*")"),
+       x = "Month")+
+  theme_bw()+
+  theme(legend.position="bottom")
+
+
 
 flux.data2 %>%
   filter(qc_co2_flux<2 & `u*`>0.2) %>%
 ggplot(., aes(date_time, w_rot))+geom_line()
+
+flux.data2 %>%
+  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+  ggplot(., aes(date_time, w_rot))+geom_line()
+
+# rain in mm
+ggplot(flux.data2, aes(date_time, P_RAIN_1_1_1*1000))+
+  geom_line()+
+  labs(y="Rainfall (mm)",
+       x = "Month")+
+  theme_bw()
+
+# Air Temperature in C
+ggplot(flux.data2, aes(date_time, TA_1_1_1-273.15))+
+  geom_point(size=0.1,color="grey")+
+  geom_line(size=0.2)+
+  labs(y=expression("Air Temperature ("~degree~"C)"), x="Month")+
+  theme_bw()
+
+# windrose
+wind.dat <- flux.data2%>%
+select(date_time,WS_1_1_1,WD_1_1_1, wind_speed, wind_dir)%>%
+  drop_na()
+
+plot.windrose(wind.dat,
+              wind.dat$WS_1_1_1,
+              wind.dat$WD_1_1_1)+
+  theme_bw()+
+  labs(title="2-D Anemometer")
+
+# 
+plot.windrose(wind.dat,
+              wind.dat$wind_speed,
+              wind.dat$wind_dir)+
+  theme_bw()+
+  labs(title="Sonic Anemometer")
+
 
 ggplot(flux.data2, aes(date_time, v_rot))+geom_point()
 ggplot(flux.data2, aes(date_time, w_rot))+geom_point()
@@ -67,7 +147,16 @@ ggplot(flux.data2, aes(date_time, TS_1_1_1))+geom_point()
 
 ggplot(flux.data2, aes(date_time, TA_1_1_1))+geom_point()
 
+ggplot(flux.data2, aes(date_time, TC_1_1_1))+geom_point()
+
 ggplot(flux.data2, aes(date_time, VIN_1_1_1))+geom_line()
+
+ggplot(flux.data2, aes(date_time, sonic_temperature))+geom_line()
+
+ggplot(flux.data2, aes(date_time, co2_signal_strength_7500_mean))+geom_line()
+
+ggplot(flux.data2, aes(date_time, co2_mole_fraction))+geom_line()
+
 
 ggplot(flux.data2, aes(TA_1_1_1, TS_1_1_1))+geom_line()
 
@@ -88,13 +177,20 @@ ggplot(., aes(date_time, `x_90%`))+
 
 # use windrose to plot 
 footprint.data <- flux.data2 %>%
-  select(date_time,WD_1_1_1,`u*`,`x_90%`)%>%
+  select(date_time,WD_1_1_1,`u*`,`x_90%`,`x_70%`,`x_50%`,`x_30%`,`x_10%`)%>%
   filter(`u*`>0.2) %>%
   drop_na
 
 # use windrose function to make a footprint graph: ... it's a hack.
-plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=1000,spdres=100)
+plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=1000,spdres=100)+theme_bw()
 
 # histogram of footprint distance
-ggplot(footprint.data, aes(`x_90%`))+geom_histogram()
-
+ggplot(footprint.data)+
+  geom_histogram(aes(`x_10%`),fill="blue")+
+  geom_histogram(aes(`x_30%`),fill="red")+
+  geom_histogram(aes(`x_50%`),fill="green")+
+  geom_histogram(aes(`x_70%`),fill="purple")+
+  geom_histogram(aes(`x_90%`),colour="grey")+
+  labs(x="Distance Contribution (m)")+
+  theme_bw()
+  
