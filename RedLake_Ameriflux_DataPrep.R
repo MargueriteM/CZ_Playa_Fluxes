@@ -48,7 +48,10 @@ data2 <- ldply(flux.files2[151:167], read_column_number)
 # issue with files between 167-174 (zero KB files)
 data3 <- ldply(flux.files2[174:241], read_column_number)
 
-data <- rbind(data1, data2, data3)
+data4 <- ldply(flux.files2[242:280], read_column_number)
+
+
+data <- rbind(data1, data2, data3, data4)
 
 # read the flux files as csv and combine into single dataframe
 
@@ -253,9 +256,11 @@ ggplot(flux.data2, aes(TIMESTAMP_START, `u*`))+geom_point()
 # rain, rh, lws??
 rain <- ggplot(flux.data2, aes(TIMESTAMP_START, P_RAIN_1_1_1))+geom_point() + theme(axis.title.x=element_blank())
 rh <- ggplot(flux.data2, aes(TIMESTAMP_START, RH_1_1_1))+geom_point() + theme(axis.title.x=element_blank())
-lws <- ggplot(flux.data2, aes(TIMESTAMP_START, LWS_1_1_1))+geom_point() + theme(axis.title.x=element_blank())
+# not transfering to ameriflux format
+#lws <- ggplot(flux.data2, aes(TIMESTAMP_START, LWS_1_1_1))+geom_point() + theme(axis.title.x=element_blank())
 
 plot_grid(rain, rh, nrow=2)
+#plot_grid(rain, rh, lws, nrow=3)
 
 # rain and SWC
 vwc1 <- ggplot(flux.data2, aes(TIMESTAMP_START, SWC_1_1_1))+geom_point() + theme(axis.title.x=element_blank())
