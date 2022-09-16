@@ -16,7 +16,7 @@ source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/
 #
 
 # get data from summaries folder
-flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries",full.names=TRUE)
+flux.files2 <- list.files(path="C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries",full.names=TRUE)
 
 # read the column number for each summary file
 read_column_number <- function(colname){
@@ -32,7 +32,7 @@ data1 <- ldply(flux.files2[1:150], read_column_number)
 data2 <- ldply(flux.files2[151:167], read_column_number)
 
 # issue with files between 167-174 (zero KB files)
-data3 <- ldply(flux.files2[174:233], read_column_number)
+data3 <- ldply(flux.files2[174:314], read_column_number)
 
 data <- rbind(data1, data2, data3)
 
@@ -41,7 +41,7 @@ data <- rbind(data1, data2, data3)
 # general column number is 211, select files
 flux.files.read <- data %>%
   filter(colnumber==211) %>%
-  mutate(file.path = paste("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries/",
+  mutate(file.path = paste("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries/",
                            file,".txt",sep=''))
 # get column names and units from complete summary files
 flux.units2 <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
