@@ -20,6 +20,7 @@ library(data.table)
 source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
+# setwd("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
 setwd("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
 
 # read column names and import data
@@ -34,7 +35,8 @@ biomet.long <- biomet %>%
          date=as.Date(TIMESTAMP))
 
 # create nicer plot titles
-plot.titles <- data.frame(selection1 = c("^PA",
+plot.titles <- data.frame(selection1 = c("^VIN",
+"^PA",
                                     "^SWC",
                                     "^TS",
                                     "^TA",
@@ -45,7 +47,7 @@ plot.titles <- data.frame(selection1 = c("^PA",
                                     "^ALB",
                                     "^RG|^PPFD",
                                     "^RN"),
-                          selection2 = c("^PA",
+                          selection2 = c("^VIN","^PA",
                                     "^SWC",
                                     "^TS",
                                     "^TA",
@@ -56,7 +58,7 @@ plot.titles <- data.frame(selection1 = c("^PA",
                                     "^ALB",
                                     "^RG|^PPFD",
                                     "^RN"),
-                          selection3 = c("^PA",
+                          selection3 = c("^VIN","^PA",
                                     "^SWC",
                                     "^TS",
                                     "^TA",
@@ -67,7 +69,8 @@ plot.titles <- data.frame(selection1 = c("^PA",
                                     "^ALB",
                                     "^RG|^PPFD",
                                     "^RN"),
-                          name = c("Atmospheric Pressure",
+                          name = c("Datalogger Input Voltage (V)",
+                                   "Atmospheric Pressure",
                           "Soil Moisture Content (% VWC)",
                           "Soil Temperature (C)",
                           "Air Temperature (C)",
@@ -91,7 +94,7 @@ Optional Photo display: found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa: 20
 # This picture is found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa
 # this code will run best if the picture is saved in the same project folder as this .Rmd file
 # If it's causing trouble, comment out thee knitr:: line below and run without the image
-# knitr::include_graphics("20211023_RedLake_SiteView.jpg")
+ knitr::include_graphics("20211023_RedLake_SiteView.jpg")
 ```
 
 # Plot any variables
@@ -122,7 +125,8 @@ dateRangeInput("daterange", "Date range:",
                  max = max(biomet.long$date))
 
 selectInput("variable1", "Biomet variable 1:",
-             c("Atmospheric Pressure" = "^PA",
+             c("Datalogger Voltage" = "^VIN",
+               "Atmospheric Pressure" = "^PA",
                "Air Temperature" = "^TA",
                "Canopy Temperature" ="^TC",
                "Soil Temperature" = "^TS",
