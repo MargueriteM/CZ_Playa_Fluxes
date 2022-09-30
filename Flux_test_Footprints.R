@@ -32,7 +32,7 @@ data1 <- ldply(flux.files2[1:150], read_column_number)
 data2 <- ldply(flux.files2[151:167], read_column_number)
 
 # issue with files between 167-174 (zero KB files)
-data3 <- ldply(flux.files2[174:233], read_column_number)
+data3 <- ldply(flux.files2[174:328], read_column_number)
 
 data <- rbind(data1, data2, data3)
 
