@@ -34,7 +34,10 @@ data2 <- ldply(flux.files2[151:167], read_column_number)
 # issue with files between 167-174 (zero KB files)
 data3 <- ldply(flux.files2[174:328], read_column_number)
 
-data <- rbind(data1, data2, data3)
+# next
+data4 <- ldply(flux.files2[329:460], read_column_number)
+
+data <- rbind(data1, data2, data3, data4)
 
 # read the flux files as csv and combine into single dataframe
 
@@ -84,6 +87,32 @@ flux.data2 %>%
   theme_bw()+
   theme(legend.position="bottom")
 
+# constrain the flux further, mutliply to g and plot by year
+
+# calculate daily mean flux
+flux.mean <- flux.data2 %>%
+  filter((co2_flux>-10 & co2_flux<5) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
+ group_by(date)%>%
+  summarise(co2_g_mean = mean(co2_flux*1800*1*10^-6*12.01, na.rm=TRUE))
+
+ 
+  ggplot(flux.mean, aes(yday(date), co2_g_mean))+
+  geom_point (size=0.25)+
+    geom_line(size=0.1)+
+  labs(y=expression("Half-hourly NEE (g C" *m^-2* "30mi" *n^-1*")"),
+       x = "Month")+
+    geom_hline(yintercept=0)+
+    facet_grid(.~year(date))+
+  theme_bw()
+  
+  # rain in mm by day
+  ggplot(flux.data2, aes(yday(date_time), P_RAIN_1_1_1*1000))+
+    geom_line()+
+    labs(y="Rainfall (mm)",
+         x = "Month")+
+    theme_bw()+
+    facet_grid(.~year(date))
+
 #LE graphs
 flux.data2 %>%
   filter(qc_LE<2 & `u*`>0.2) %>%
@@ -110,7 +139,8 @@ ggplot(flux.data2, aes(date_time, P_RAIN_1_1_1*1000))+
   geom_line()+
   labs(y="Rainfall (mm)",
        x = "Month")+
-  theme_bw()
+  theme_bw()+
+  facet_grid(.~year(date))
 
 # Air Temperature in C
 ggplot(flux.data2, aes(date_time, TA_1_1_1-273.15))+
