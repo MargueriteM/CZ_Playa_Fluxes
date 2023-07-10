@@ -16,7 +16,7 @@ source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/
 #
 
 # get data from summaries folder
-flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries",full.names=TRUE)
+flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
 
 # read the column number for each summary file
 read_column_number <- function(colname){
@@ -37,14 +37,17 @@ data3 <- ldply(flux.files2[174:328], read_column_number)
 # next
 data4 <- ldply(flux.files2[329:460], read_column_number)
 
-data <- rbind(data1, data2, data3, data4)
+# next
+data5 <- ldply(flux.files2[461:574], read_column_number)
+
+data <- rbind(data1, data2, data3, data4, data5)
 
 # read the flux files as csv and combine into single dataframe
 
 # general column number is 211, select files
 flux.files.read <- data %>%
   filter(colnumber==211) %>%
-  mutate(file.path = paste("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/summaries/",
+  mutate(file.path = paste("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
                            file,".txt",sep=''))
 # get column names and units from complete summary files
 flux.units2 <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
@@ -140,7 +143,7 @@ ggplot(flux.data2, aes(date_time, P_RAIN_1_1_1*1000))+
   labs(y="Rainfall (mm)",
        x = "Month")+
   theme_bw()+
-  facet_grid(.~year(date))
+  facet_grid(.~year(date), scales="free_x")
 
 # Air Temperature in C
 ggplot(flux.data2, aes(date_time, TA_1_1_1-273.15))+
