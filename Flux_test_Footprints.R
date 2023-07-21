@@ -40,7 +40,10 @@ data4 <- ldply(flux.files2[329:460], read_column_number)
 # next
 data5 <- ldply(flux.files2[461:574], read_column_number)
 
-data <- rbind(data1, data2, data3, data4, data5)
+data6 <- ldply(flux.files2[575:602], read_column_number)
+
+
+data <- rbind(data1, data2, data3, data4, data5, data6)
 
 # read the flux files as csv and combine into single dataframe
 
@@ -59,6 +62,9 @@ flux.data2 <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE,
 # format date_time variable
 flux.data2 <- flux.data2 %>%
   mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
+
+# view end of data
+tail(flux.data2)
 
 # graph flux and u*
 flux.data2 %>%
