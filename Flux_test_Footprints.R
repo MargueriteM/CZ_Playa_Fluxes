@@ -158,6 +158,23 @@ ggplot(flux.data2, aes(date_time, TA_1_1_1-273.15))+
   labs(y=expression("Air Temperature ("~degree~"C)"), x="Month")+
   theme_bw()
 
+# Soil Temperature profiles in C
+ggplot(flux.data2, aes(x=date_time))+
+  geom_line(size=0.2, aes(y=TS_1_1_1-273.15))+
+  geom_line(size=0.2, aes(y=TS_1_2_1-273.15),color="lightblue")+
+  geom_line(size=0.4, aes(y=TS_1_3_1-273.15),color="grey")+
+  geom_line(size=0.4, aes(y=TS_1_4_1-273.15),color="lightgrey")+
+  geom_line(size=0.4, aes(y=TS_1_5_1-273.15),color="lightgreen")+
+  labs(y=expression("Soil Temperature ("~degree~"C)"), x="Month")+
+  theme_bw()
+
+# soil integrated surface temperature in C
+ggplot(flux.data2, aes(x=date_time))+
+  geom_line(size=0.2, aes(y=TS_2_1_1-273.15))+
+  geom_line(size=0.2, aes(y=TS_3_1_1-273.15),color="lightblue")+
+  labs(y=expression("Soil Temperature ("~degree~"C)"), x="Month")+
+  theme_bw()
+
 # windrose
 wind.dat <- flux.data2%>%
 select(date_time,WS_1_1_1,WD_1_1_1, wind_speed, wind_dir)%>%
