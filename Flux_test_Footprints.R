@@ -40,7 +40,7 @@ data4 <- ldply(flux.files2[329:460], read_column_number)
 # next
 data5 <- ldply(flux.files2[461:574], read_column_number)
 
-data6 <- ldply(flux.files2[575:602], read_column_number)
+data6 <- ldply(flux.files2[575:622], read_column_number)
 
 
 data <- rbind(data1, data2, data3, data4, data5, data6)
@@ -101,7 +101,7 @@ flux.data2 %>%
 # calculate daily mean flux
 flux.mean <- flux.data2 %>%
   filter((co2_flux>-10 & co2_flux<5) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
- group_by(date)%>%
+  group_by(date) %>%
   summarise(co2_g_mean = mean(co2_flux*1800*1*10^-6*12.01, na.rm=TRUE))
 
  
