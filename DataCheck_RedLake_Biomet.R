@@ -19,7 +19,7 @@ library(gridExtra)
 source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
-setwd("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
+setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
 
 # read column names and import data
 biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
