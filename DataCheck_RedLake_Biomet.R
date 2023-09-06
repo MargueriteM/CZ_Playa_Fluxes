@@ -19,7 +19,7 @@ library(gridExtra)
 source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
-setwd("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
+setwd("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
 
 # read column names and import data
 biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
@@ -59,9 +59,9 @@ biomet.long %>%
 
 # plot all SWC variables
 biomet.long %>%
-  filter(str_detect(variable,"^SWC")) %>%
+  filter(str_detect(variable,"^SWC|^P_RAIN")) %>%
 ggplot(., aes(TIMESTAMP, value))+
-  geom_point()+
+ # geom_point()+
   geom_line()+
   facet_grid(variable~., scales="free_y")
 
@@ -69,7 +69,7 @@ ggplot(., aes(TIMESTAMP, value))+
 biomet.long %>%
   filter(str_detect(variable,"^TS|^TA")) %>%
   ggplot(., aes(TIMESTAMP, value))+
-  geom_point()+
+  #geom_point()+
   geom_line()+
   facet_grid(variable~., scales="free_y")
 

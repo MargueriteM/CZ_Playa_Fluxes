@@ -12,11 +12,13 @@ library(cowplot)
 source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
 
 # working directory (don't need to set, all file reads have full path)
-# setwd("~/Desktop/OneDrive - University of Texas at El Paso/CZ_Drylands/JER_RedLakePlaya/Data/SmartFlux/results/2021/09")
+# setwd("~/Desktop/OneDrive - University of Texas at El Paso/CZ_Drylands/JER_RedLakePlaya/Data/Data_DL_Collect/SmartFlux/results/2021/09")
 #
 
 # get data from summaries folder
-flux.files2 <- list.files(path="~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
+
+flux.files2 <- list.files(path="C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
+
 
 # read the column number for each summary file
 read_column_number <- function(colname){
@@ -32,6 +34,8 @@ data1 <- ldply(flux.files2[1:150], read_column_number)
 data2 <- ldply(flux.files2[151:167], read_column_number)
 
 # issue with files between 167-174 (zero KB files)
+
+
 data3 <- ldply(flux.files2[174:328], read_column_number)
 
 # next
@@ -45,12 +49,15 @@ data6 <- ldply(flux.files2[575:622], read_column_number)
 
 data <- rbind(data1, data2, data3, data4, data5, data6)
 
+
 # read the flux files as csv and combine into single dataframe
 
 # general column number is 211, select files
 flux.files.read <- data %>%
   filter(colnumber==211) %>%
-  mutate(file.path = paste("~/Desktop/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
+
+  mutate(file.path = paste("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
+
                            file,".txt",sep=''))
 # get column names and units from complete summary files
 flux.units2 <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
@@ -74,9 +81,13 @@ flux.data2 %>%
   
 
 # make some quick graphs
+datefilter <- as.Date("2022-02-27")
 # flux
 flux.data2 %>%
-  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
+  filter((co2_flux>-25 & co2_flux<25) &
+           qc_co2_flux<2 & `u*`>0.2 &
+           co2_signal_strength_7500_mean>85&
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, co2_flux))+
   geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)+
   geom_line(size=0.1)+
@@ -87,7 +98,10 @@ flux.data2 %>%
 
 # co2 mol fraction
 flux.data2 %>%
-  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
+  filter((co2_flux>-25 & co2_flux<25) & qc_co2_flux<2 & 
+           `u*`>0.2 &
+           co2_signal_strength_7500_mean>85 &
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, co2_mole_fraction))+
   geom_point(aes(colour = factor(qc_co2_flux)), size=0.25)+
   geom_line(size=0.1)+
@@ -242,7 +256,9 @@ footprint.data <- flux.data2 %>%
   drop_na
 
 # use windrose function to make a footprint graph: ... it's a hack.
-plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=1000,spdres=100)+theme_bw()
+plot.windrose(footprint.data,footprint.data$`x_90%`,footprint.data$WD_1_1_1,spdmax=1000,spdres=100)+
+  theme_bw()+
+  labs(title="Footprint direction & distance")
 
 # histogram of footprint distance
 ggplot(footprint.data)+
