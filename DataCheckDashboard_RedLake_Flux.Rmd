@@ -43,9 +43,11 @@ data2 <- ldply(flux.files2[151:167], read_column_number)
 # issue with files between 167-174 (zero KB files)
 data3 <- ldply(flux.files2[174:314], read_column_number)
 
-data4 <- ldply(flux.files2[314:651], read_column_number)
+data4 <- ldply(flux.files2[314:500], read_column_number)
 
-data <- rbind(data1, data2, data3, data4)
+data5 <- ldply(flux.files2[500:658], read_column_number)
+
+data <- rbind(data1, data2, data3, data4, data5)
 
 # read the flux files as csv and combine into single dataframe
 
