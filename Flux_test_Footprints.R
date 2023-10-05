@@ -17,7 +17,7 @@ source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/
 
 # get data from summaries folder
 
-flux.files2 <- list.files(path="C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
+flux.files2 <- list.files(path="/Users/memauritz/Library/CloudStorage/OneDrive-UniversityofTexasatElPaso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
 
 
 # read the column number for each summary file
@@ -44,7 +44,7 @@ data4 <- ldply(flux.files2[329:460], read_column_number)
 # next
 data5 <- ldply(flux.files2[461:574], read_column_number)
 
-data6 <- ldply(flux.files2[575:622], read_column_number)
+data6 <- ldply(flux.files2[575:679], read_column_number)
 
 
 data <- rbind(data1, data2, data3, data4, data5, data6)
@@ -56,11 +56,10 @@ data <- rbind(data1, data2, data3, data4, data5, data6)
 flux.files.read <- data %>%
   filter(colnumber==211) %>%
 
-  mutate(file.path = paste("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
-
+  mutate(file.path = paste("/Users/memauritz/Library/CloudStorage/OneDrive-UniversityofTexasatElPaso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
                            file,".txt",sep=''))
 # get column names and units from complete summary files
-flux.units2 <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
+flux.units2 <- fread(flux.files.read[1,"file.path"], sep="\t", dec=".", header=TRUE, skip=0)[1,]
 
 # get data from complete summary files
 flux.data2 <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE, fread, sep="\t", dec=".",
@@ -81,7 +80,7 @@ flux.data2 %>%
   
 
 # make some quick graphs
-datefilter <- as.Date("2022-02-27")
+datefilter <- as.Date("2023-01-01")
 # flux
 flux.data2 %>%
   filter((co2_flux>-25 & co2_flux<25) &
@@ -138,7 +137,8 @@ flux.mean <- flux.data2 %>%
 
 #LE graphs
 flux.data2 %>%
-  filter(qc_LE<2 & `u*`>0.2) %>%
+  filter(qc_LE<2 & `u*`>0.2 &
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, (LE/2454000)*1800))+
   geom_point(aes(colour = factor(qc_LE)), size=0.25)+
   geom_line(size=0.1)+
@@ -150,11 +150,13 @@ flux.data2 %>%
 
 
 flux.data2 %>%
-  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+  filter(qc_co2_flux<2 & `u*`>0.2&
+           as.Date(date_time)>datefilter) %>%
 ggplot(., aes(date_time, w_rot))+geom_line()
 
 flux.data2 %>%
-  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+  filter(qc_co2_flux<2 & `u*`>0.2&
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, w_rot))+geom_line()
 
 # rain in mm
@@ -191,6 +193,7 @@ ggplot(flux.data2, aes(x=date_time))+
 
 # windrose
 wind.dat <- flux.data2%>%
+  filter(as.Date(date_time)>datefilter)%>%
 select(date_time,WS_1_1_1,WD_1_1_1, wind_speed, wind_dir)%>%
   drop_na()
 
