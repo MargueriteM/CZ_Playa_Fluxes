@@ -46,8 +46,11 @@ data5 <- ldply(flux.files2[461:574], read_column_number)
 
 data6 <- ldply(flux.files2[575:679], read_column_number)
 
+data7 <- ldply(flux.files2[680:706], read_column_number)
 
-data <- rbind(data1, data2, data3, data4, data5, data6)
+data8 <- ldply(flux.files2[707:825], read_column_number)
+
+data <- rbind(data1, data2, data3, data4, data5, data6, data7, data8)
 
 
 # read the flux files as csv and combine into single dataframe
@@ -80,7 +83,7 @@ flux.data2 %>%
   
 
 # make some quick graphs
-datefilter <- as.Date("2023-01-01")
+datefilter <- min(as.Date(flux.data2$date_time)) #as.Date("2023-01-01")
 # flux
 flux.data2 %>%
   filter((co2_flux>-25 & co2_flux<25) &
@@ -92,6 +95,7 @@ flux.data2 %>%
   geom_line(size=0.1)+
   labs(y=expression("Half-hourly NEE (μmol C" *O[2]*" "*m^-2* "se" *c^-1*")"),
        x = "Month")+
+  facet_grid(.~year(date), scales="free_x")+
   theme_bw()+
   theme(legend.position="bottom")
 
@@ -111,20 +115,20 @@ flux.data2 %>%
 
 # constrain the flux further, mutliply to g and plot by year
 
-# calculate daily mean flux
-flux.mean <- flux.data2 %>%
+# calculate half-hourly gC
+flux.g <- flux.data2 %>%
   filter((co2_flux>-10 & co2_flux<5) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
-  group_by(date) %>%
-  summarise(co2_g_mean = mean(co2_flux*1800*1*10^-6*12.01, na.rm=TRUE))
+  #group_by(date) %>%
+  mutate(co2_g = co2_flux*1800*1*10^-6*12.01, na.rm=TRUE)
 
  
-  ggplot(flux.mean, aes(yday(date), co2_g_mean))+
+  ggplot(flux.g, aes(date_time, co2_g))+
   geom_point (size=0.25)+
     geom_line(size=0.1)+
   labs(y=expression("Half-hourly NEE (g C" *m^-2* "30mi" *n^-1*")"),
        x = "Month")+
     geom_hline(yintercept=0)+
-    facet_grid(.~year(date))+
+    facet_grid(.~year(date), scales="free_x")+
   theme_bw()
   
   # rain in mm by day
