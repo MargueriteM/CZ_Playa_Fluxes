@@ -1,0 +1,401 @@
+---
+title: "Red Lake Biomet Data Check"
+author: "Marguerite Mauritz"
+date: "11/8/2021"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+# load libraries
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(stringr)
+library(data.table)
+
+# get windrose function, source directly from Github
+#source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
+source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/plot.windrose.R"))
+
+# set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
+
+setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
+
+setwd("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
+
+
+# read column names and import data
+biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
+biomet <- read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=4, header=FALSE,
+                     col.names=biomet.head, na.strings=c("NAN"))
+
+# change data to long format
+biomet.long <- biomet %>%
+  pivot_longer(!c(TIMESTAMP,RECORD), names_to="variable",values_to="value") %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP),
+         date=as.Date(TIMESTAMP))
+
+# create nicer plot titles
+plot.titles <- data.frame(selection1 = c("^VIN",
+"^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC",
+                                     "^P_RAIN",
+                                     "^LWS",
+                                     "^SWIN|^SWOUT",
+                                    "^ALB",
+                                    "^RG|^PPFD",
+                                    "^RN"),
+                          selection2 = c("^VIN","^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC",
+                                     "^P_RAIN",
+                                     "^LWS",
+                                     "^SWIN|^SWOUT",
+                                    "^ALB",
+                                    "^RG|^PPFD",
+                                    "^RN"),
+                          selection3 = c("^VIN","^PA",
+                                    "^SWC",
+                                    "^TS",
+                                    "^TA",
+                                    "^TC",
+                                    "^P_RAIN",
+                                    "^LWS",
+                                     "^SWIN|^SWOUT",
+                                    "^ALB",
+                                    "^RG|^PPFD",
+                                    "^RN"),
+                          name = c("Datalogger Input Voltage (V)",
+                                   "Atmospheric Pressure",
+                          "Soil Moisture Content (% VWC)",
+                          "Soil Temperature (C)",
+                          "Air Temperature (C)",
+                          "Canopy Temperature (C)",
+                          "Rainfall (mm)",
+                          "Leaf Wetness",
+                          "Shortwave Radiation",
+                          "Albedo",
+                          "Global Radiation & PAR",
+                          "Net Radiation"))
+```
+
+# Welcome
+
+### Welcome!
+#### This dashboard shows data collected by the Dryland Critical Zone Project at Red Lake Playa.
+
+Optional Photo display: found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa: 20211023_RedLake_SiteView.jpg
+
+```{r site pic, out.width='100%', out.height='100%', echo=TRUE}
+# This picture is found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa
+# this code will run best if the picture is saved in the same project folder as this .Rmd file
+# If it's causing trouble, comment out thee knitr:: line below and run without the image
+ #knitr::include_graphics("20211023_RedLake_SiteView.jpg")
+```
+
+# Plot any variables
+
+Column {.sidebar}
+---------------------------------------
+
+### Select Date Range and variables
+
+These graphs show most recent incoming Biomet data from the tower at Red Lake Playa. Data are 30min mean values.
+
+**Note: Flux calculations are preliminary and for visualisation only!!** 
+
+#### Last timestamp data updated:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+print(max(biomet.long$TIMESTAMP))
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+
+selectInput("variable1", "Biomet variable 1:",
+             c("Datalogger Voltage" = "^VIN",
+               "Atmospheric Pressure" = "^PA",
+               "Air Temperature" = "^TA",
+               "Canopy Temperature" ="^TC",
+               "Soil Temperature" = "^TS",
+               "Soil Moisture" = "^SWC",
+               "Soil Heat Flux" ="^SHF",
+               "Rainfall" =  "^P_RAIN",
+               "Leaf wetness" = "^LWS",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+               "Albedo" = "^ALB",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+selectInput("variable2", "Biomet variable 2:",
+             c("Atmospheric Pressure" = "^PA",
+               "Air Temperature" = "^TA",
+               "Canopy Temperature" ="^TC",
+               "Soil Temperature" = "^TS",
+               "Soil Moisture" = "^SWC",
+               "Soil Heat Flux" ="^SHF",
+               "Rainfall" =  "^P_RAIN",
+               "Leaf wetness" = "^LWS",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+                "Albedo" = "^ALB",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+selectInput("variable3", "Radiation Components:",
+            c("Longwave Radiation" = "^LWIN|^LWOUT",
+              "Shortwave Radiation" = "^SWIN|^SWOUT",
+              "Soil Heat Flux" ="^SHF", 
+              "Albedo" = "^ALB",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+radioButtons("ax.scales", "Axis scales:",
+             c("Fixed" = "fixed", 
+               "Free x" = "free_x",
+               "Free y" = "free_y",
+               "Free x & y" = "free"))
+```
+
+Column
+-------------------------------------------------------------
+Graph two different variables in parallel
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+  
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable1) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable1)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()})
+
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable2) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection2 == input$variable2)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()})
+```
+Graph Radiation Components Only
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable3) &
+           (date >= input$daterange[[1]] & date <= input$daterange[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection3 == input$variable3)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+       facet_grid(input$variable3~.)+
+ theme_bw()+
+       theme(legend.position = "bottom")})
+
+```
+
+# Show Windrose (2-D Anemometer)
+
+Column {.sidebar}
+---------------------------------------
+
+Select Date Range for Wind Rose
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange2", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+```
+
+Column
+-------------------------------------------------------------
+Wind Rose from 2-D Wind Anemometer
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+renderPlot({
+wind.data <-  biomet %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP),
+         date=as.Date(TIMESTAMP))%>%
+  filter((date >= input$daterange2[[1]] & date <= input$daterange2[[2]])) 
+# plot wind variables in windrose
+plot.windrose(wind.data,wind.data$WS_16_33_1_1_1,wind.data$WD_20_35_1_1_1)
+})
+```
+
+# Focus on Soil Data
+
+Column {.sidebar}
+---------------------------------------
+
+### Select Date Range and variables
+
+These graphs show most recent incoming Biomet data from the tower at Red Lake Playa. Data are 30min mean values.
+
+**Note: Flux calculations are preliminary and for visualisation only!!** 
+
+#### Last timestamp data updated:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+print(max(biomet.long$TIMESTAMP))
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+dateRangeInput("daterange3", "Date range:",
+                 start = min(biomet.long$date),
+                 end   = max(biomet.long$date),
+                 min = min(biomet.long$date),
+                 max = max(biomet.long$date))
+
+selectInput("variable4", "Biomet variable:",
+             c("Atmospheric Pressure" = "^PA",
+               "Air Temperature" = "^TA",
+               "Canopy Temperature" ="^TC",
+               "Rainfall" =  "^P_RAIN",
+               "Leaf wetness" = "^LWS",
+               "Longwave Radiation" = "^LWIN|^LWOUT",
+               "Shortwave Radiation" = "^SWIN|^SWOUT",
+               "Albedo" = "^ALB",
+              "Global Radiation & PAR" = "^RG|^PPFD",
+              "Net Radiation" = "^RN"))
+
+selectInput("variable5", "Soil variable 1:",
+             c("All Soil Temperature Profile" = "^TS_2_38_1",
+               "All Soil Temperature Integrated (0.5-15cm)" = "^TS_2_38_2|^TS_2_38_3",
+               "All Soil Moisture Profile" = "^SWC",
+               "All Soil Heat Flux (16cm)" ="^SHF",
+               "Soil Temperature 10cm" ="^TS_2_38_1_1_1",
+               "Soil Temperature 20cm" ="^TS_2_38_1_2_1",
+               "Soil Temperature 31cm" ="^TS_2_38_1_3_1",
+               "Soil Temperature 49cm" ="^TS_2_38_1_4_1",
+               "Soil Temperature 93cm" ="^TS_2_38_1_5_1",
+               "Soil Moisture 10cm" ="^SWC_12_36_1_1_1",
+               "Soil Moisture 20cm" ="^SWC_12_36_1_2_1",
+               "Soil Moisture 31cm" ="^SWC_12_36_1_3_1",
+               "Soil Moisture 49cm" ="^SWC_12_36_1_4_1",
+               "Soil Moisture 93cm" ="^SWC_12_36_1_5_1"))
+
+selectInput("variable6", "Soil Variable 2:",
+            c("All Soil Temperature Profile" = "^TS_2_38_1",
+               "All Soil Temperature Integrated (0.5-15cm)" = "^TS_2_38_2|^TS_2_38_3",
+               "All Soil Moisture Profile" = "^SWC",
+               "All Soil Heat Flux (16cm)" ="^SHF",
+              "Soil Temperature 10cm" ="^TS_2_38_1_1_1",
+               "Soil Temperature 20cm" ="^TS_2_38_1_2_1",
+               "Soil Temperature 31cm" ="^TS_2_38_1_3_1",
+               "Soil Temperature 49cm" ="^TS_2_38_1_4_1",
+               "Soil Temperature 93cm" ="^TS_2_38_1_5_1",
+              "Soil Moisture 10cm" ="^SWC_12_36_1_1_1",
+               "Soil Moisture 20cm" ="^SWC_12_36_1_2_1",
+               "Soil Moisture 31cm" ="^SWC_12_36_1_3_1",
+               "Soil Moisture 49cm" ="^SWC_12_36_1_4_1",
+               "Soil Moisture 93cm" ="^SWC_12_36_1_5_1"))
+
+radioButtons("ax.scales", "Axis scales:",
+             c("Fixed" = "fixed", 
+               "Free x" = "free_x",
+               "Free y" = "free_y",
+               "Free x & y" = "free"))
+```
+
+Column
+-------------------------------------------------------------
+Graph Met and Soil Variables in Parallel  
+Profile measurements are at 10, 20, 31, 49, 93cm
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+# biomet plot
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable4) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable4)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()})
+
+# soil plot 1
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable5) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable5)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+    facet_grid(variable~., scales = input$ax.scales)+
+ theme_bw()+
+       theme(legend.position="bottom")})
+
+# soil plot 2
+renderPlot({
+    c <-  biomet.long %>%
+  filter(str_detect(variable,input$variable6) &
+           (date >= input$daterange3[[1]] & date <= input$daterange3[[2]])) 
+  
+   d <- plot.titles %>%
+     filter(selection1 == input$variable5)
+    # setnames(c,input$variable1,"selected")
+ 
+    # plot
+     ggplot(c, aes(TIMESTAMP, value, colour=variable))+
+    geom_line()+
+    labs(title = d$name, y=d$name)+
+       facet_grid(input$variable3~.)+
+ theme_bw()+
+           facet_grid(variable~., scales = input$ax.scales)+
+       theme(legend.position = "bottom")})
+
+```
