@@ -17,7 +17,7 @@ source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/
 
 # get data from summaries folder
 
-flux.files2 <- list.files(path="C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
+flux.files2 <- list.files(path="/Users/memauritz/Library/CloudStorage/OneDrive-UniversityofTexasatElPaso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
 
 
 # read the column number for each summary file
@@ -44,10 +44,14 @@ data4 <- ldply(flux.files2[329:460], read_column_number)
 # next
 data5 <- ldply(flux.files2[461:574], read_column_number)
 
-data6 <- ldply(flux.files2[575:658], read_column_number)
 
+data6 <- ldply(flux.files2[575:679], read_column_number)
 
-data <- rbind(data1, data2, data3, data4, data5, data6)
+data7 <- ldply(flux.files2[680:706], read_column_number)
+
+data8 <- ldply(flux.files2[707:825], read_column_number)
+
+data <- rbind(data1, data2, data3, data4, data5, data6, data7, data8)
 
 
 # read the flux files as csv and combine into single dataframe
@@ -56,11 +60,10 @@ data <- rbind(data1, data2, data3, data4, data5, data6)
 flux.files.read <- data %>%
   filter(colnumber==211) %>%
 
-  mutate(file.path = paste("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
-
+  mutate(file.path = paste("/Users/memauritz/Library/CloudStorage/OneDrive-UniversityofTexasatElPaso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
                            file,".txt",sep=''))
 # get column names and units from complete summary files
-flux.units2 <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
+flux.units2 <- fread(flux.files.read[1,"file.path"], sep="\t", dec=".", header=TRUE, skip=0)[1,]
 
 # get data from complete summary files
 flux.data2 <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE, fread, sep="\t", dec=".",
@@ -81,7 +84,7 @@ flux.data2 %>%
   
 
 # make some quick graphs
-datefilter <- as.Date("2022-02-27")
+datefilter <- min(as.Date(flux.data2$date_time)) #as.Date("2023-01-01")
 # flux
 flux.data2 %>%
   filter((co2_flux>-25 & co2_flux<25) &
@@ -93,6 +96,7 @@ flux.data2 %>%
   geom_line(size=0.1)+
   labs(y=expression("Half-hourly NEE (μmol C" *O[2]*" "*m^-2* "se" *c^-1*")"),
        x = "Month")+
+  facet_grid(.~year(date), scales="free_x")+
   theme_bw()+
   theme(legend.position="bottom")
 
@@ -112,8 +116,8 @@ flux.data2 %>%
 
 # constrain the flux further, mutliply to g and plot by year
 
-# calculate daily mean flux
-flux.mean <- flux.data2 %>%
+# calculate half-hourly gC
+flux.g <- flux.data2 %>%
   filter((co2_flux>-10 & co2_flux<5) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
   group_by(DOY) %>%
   summarise(co2_g_mean = mean(co2_flux*1800*1*10^-6*12.01, na.rm=TRUE))
@@ -125,7 +129,7 @@ flux.mean <- flux.data2 %>%
   labs(y=expression("Half-hourly NEE (g C" *m^-2* "30mi" *n^-1*")"),
        x = "Month")+
     geom_hline(yintercept=0)+
-    facet_grid(.~year(date))+
+    facet_grid(.~year(date), scales="free_x")+
   theme_bw()
   
   # rain in mm by day
@@ -138,7 +142,8 @@ flux.mean <- flux.data2 %>%
 
 #LE graphs
 flux.data2 %>%
-  filter(qc_LE<2 & `u*`>0.2) %>%
+  filter(qc_LE<2 & `u*`>0.2 &
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, (LE/2454000)*1800))+
   geom_point(aes(colour = factor(qc_LE)), size=0.25)+
   geom_line(size=0.1)+
@@ -150,11 +155,13 @@ flux.data2 %>%
 
 
 flux.data2 %>%
-  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+  filter(qc_co2_flux<2 & `u*`>0.2&
+           as.Date(date_time)>datefilter) %>%
 ggplot(., aes(date_time, w_rot))+geom_line()
 
 flux.data2 %>%
-  filter(qc_co2_flux<2 & `u*`>0.2) %>%
+  filter(qc_co2_flux<2 & `u*`>0.2&
+           as.Date(date_time)>datefilter) %>%
   ggplot(., aes(date_time, w_rot))+geom_line()
 
 # rain in mm
@@ -191,6 +198,7 @@ ggplot(flux.data2, aes(x=date_time))+
 
 # windrose
 wind.dat <- flux.data2%>%
+  filter(as.Date(date_time)>datefilter)%>%
 select(date_time,WS_1_1_1,WD_1_1_1, wind_speed, wind_dir)%>%
   drop_na()
 
