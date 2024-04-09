@@ -44,6 +44,7 @@ data4 <- ldply(flux.files2[329:460], read_column_number)
 # next
 data5 <- ldply(flux.files2[461:574], read_column_number)
 
+
 data6 <- ldply(flux.files2[575:679], read_column_number)
 
 data7 <- ldply(flux.files2[680:706], read_column_number)
@@ -118,11 +119,11 @@ flux.data2 %>%
 # calculate half-hourly gC
 flux.g <- flux.data2 %>%
   filter((co2_flux>-10 & co2_flux<5) & qc_co2_flux<2 & `u*`>0.2 & co2_signal_strength_7500_mean>85) %>%
-  #group_by(date) %>%
-  mutate(co2_g = co2_flux*1800*1*10^-6*12.01, na.rm=TRUE)
+  group_by(DOY) %>%
+  summarise(co2_g_mean = mean(co2_flux*1800*1*10^-6*12.01, na.rm=TRUE))
 
  
-  ggplot(flux.g, aes(date_time, co2_g))+
+  ggplot(flux.mean, aes(DOY, co2_g_mean))+
   geom_point (size=0.25)+
     geom_line(size=0.1)+
   labs(y=expression("Half-hourly NEE (g C" *m^-2* "30mi" *n^-1*")"),
