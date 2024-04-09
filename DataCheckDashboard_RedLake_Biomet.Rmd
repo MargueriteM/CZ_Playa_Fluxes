@@ -21,14 +21,7 @@ source(paste0("https://raw.githubusercontent.com/MargueriteM/R_functions/master/
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
 
-
-setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
-
-# setwd("C:/Users/memauritz/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
-
-
-setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
-
+setwd("/Users/memauritz/Library/CloudStorage/OneDrive-UniversityofTexasatElPaso/Tower Data/JER_Playa/Data/Data_DL_Collect/Biomet")
 
 
 
@@ -104,7 +97,7 @@ Optional Photo display: found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa: 20
 # This picture is found in Dryland CZ/Data/Carbon/Tower Data/JER_Playa
 # this code will run best if the picture is saved in the same project folder as this .Rmd file
 # If it's causing trouble, comment out thee knitr:: line below and run without the image
- #knitr::include_graphics("20211023_RedLake_SiteView.jpg")
+ knitr::include_graphics("20211023_RedLake_SiteView.jpg")
 ```
 
 # Plot any variables
