@@ -50,6 +50,26 @@ flux.units <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE
 # get data from complete summary files
 flux.data <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units)))
 
+
+# MM edit 9 April: 
+# Steps to add:
+# initial graphs of CO2 flux, LE, H, Co2 signal strength with color by qc code
+# case_when to make the CO2 flux, LE, H ~NA for qc code <2
+
+#eg: (creating test object just to make sure code works... when it does, can replace test with flux.data)
+test <- flux.data %>%
+  mutate(co2_flux = case_when(qc_co2_flux>2 ~ NA, 
+                              .default = co2_flux),
+         LE = case_when(qc_LE>2 ~NA,
+                        .default=LE),
+         H = case_when(qc_H>2 ~NA,
+                        .default=H))
+
+# case_when for unlikely ranges of CO2, LE, H ~ NA 
+# case_when for when P_Rain_1_1_1>1 for CO2, LE, H ~ NA 
+
+
+
 # APPLY ROLLING MEANS APPROACH TO FILTER co2, LE, H
 # use rollmeanr from zoo
 # 3 days = (24/0.5)*3 = 144
