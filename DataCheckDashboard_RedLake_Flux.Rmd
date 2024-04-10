@@ -45,11 +45,14 @@ data3 <- ldply(flux.files2[174:314], read_column_number)
 
 data4 <- ldply(flux.files2[314:500], read_column_number)
 
-data5 <- ldply(flux.files2[500:658], read_column_number)
+data5 <- ldply(flux.files2[500:727], read_column_number)
 
-data <- rbind(data1, data2, data3, data4, data5)
+data6 <- ldply(flux.files2[727:854], read_column_number)
+
 
 # read the flux files as csv and combine into single dataframe
+
+data <- rbind(data1, data2, data3, data4, data5, data6)
 
 # general column number is 211, select files
 flux.files.read <- data %>%
@@ -154,7 +157,10 @@ renderPlot({
            variable==input$variable1)
   
   ggplot(c, aes(date_time, value)) + 
-    geom_line()})
+    labs(y=input$variable1)+
+     geom_line()+
+    geom_point(size=0.7, color="red")+
+    theme_bw()})
      
 
 renderPlot({
@@ -162,16 +168,22 @@ renderPlot({
     filter(date >= input$daterange[[1]] & date <= input$daterange[[2]] &
            variable==input$variable2)
   
-  ggplot(c, aes(date_time, value)) + 
-    geom_line()})
+  ggplot(c, aes(date_time, value)) +
+    labs(y=input$variable2)+
+    geom_line()+
+    geom_point(size=0.7, color="red")+
+    theme_bw()})
 
 renderPlot({
   c <- flux.long %>%
     filter(date >= input$daterange[[1]] & date <= input$daterange[[2]] &
            variable==input$variable3)
   
-  ggplot(c, aes(date_time, value)) + 
-    geom_line()})
+  ggplot(c, aes(date_time, value)) +
+    labs(y=input$variable3)+
+    geom_line()+
+    geom_point(size=0.7, color="red")+
+    theme_bw()})
 ```
 
 # Plot Wind Data
