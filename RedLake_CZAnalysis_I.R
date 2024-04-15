@@ -33,7 +33,7 @@ data4 <- ldply(flux.files[314:500], read_column_number)
 
 data5 <- ldply(flux.files[500:727], read_column_number)
 
-data6 <- ldply(flux.files[727:854], read_column_number)
+data6 <- ldply(flux.files[727:861], read_column_number)
 
 # read the flux files as csv and combine into single dataframe
 
@@ -101,6 +101,7 @@ flux.filter <- flux.filter %>%
                         .default=LE),
          H = case_when(P_RAIN_1_1_1>0 ~NA,
                        .default=H))
+         
 
 ggplot(flux.filter, aes(date_time, co2_flux, color = factor(qc_co2_flux)))+
   geom_point()
@@ -114,7 +115,7 @@ ggplot(flux.filter, aes(date_time, H, color = factor(qc_H)))+
 # APPLY ROLLING MEANS APPROACH TO FILTER co2, LE, H
 # use rollmeanr from zoo
 # 3 days = (24/0.5)*3 = 144
-# exclude the level 1 filtered data that removes QC code==2, bad AGC, and values outside +/-30 range
+# exclude the level 1 filtered data that removes QC code==2, bad AGC, and values outside range
 flux.filter[,':=' (co2F_rollmean3 = rollapply(co2_flux, width=(24/0.5)*3, fill=0, FUN=mean, na.rm=TRUE, align="right"),
                               co2F_rollsd3 = rollapply(co2_flux, width=(24/0.5)*3, fill=0, FUN=sd, na.rm=TRUE, align="right"),
                               co2F_rollmean5 = rollapply(co2_flux, width=(24/0.5)*5, fill=0, FUN=mean, na.rm=TRUE, align="right"),
@@ -145,6 +146,13 @@ ggplot(flux.filter)+
                   ymax=co2F_rollmean3_daynight+threshold*co2F_rollsd3_daynight, fill=factor(daytime)), alpha=0.5)+
   facet_grid(daytime~.)
 
+
+#calculate mean and standard dev for first 3 days fr daytime/nighttime
+flux.filter[1:(((24/0.5)*3-1)*2.5), ':=' (co2F_rollmean3_daynight = mean(co2_flux, na.rm=TRUE),
+                                    co2F_rollsd3_daynight = sd(co2_flux, na.rm=TRUE)),
+            by=daytime]
+
+
 # mark any co2_flux >3* co2Frollsd3 (3 day moving SD) for removal
 # For Jan 2020 added 2 weeks of data prior from 2019 so the running mean can carry over. 
 flux.filter[,filter_co2F_roll := 0L]
@@ -155,6 +163,7 @@ flux.filter[co2_flux>co2F_rollmean3+threshold*co2F_rollsd3|co2_flux<co2F_rollmea
 flux.filter[,filter_co2F_roll_daynight := 0L]
 flux.filter[co2_flux>co2F_rollmean3_daynight+threshold*co2F_rollsd3_daynight|
            co2_flux<co2F_rollmean3_daynight-threshold*co2F_rollsd3_daynight, filter_co2F_roll_daynight := 2L]
+
 
 # view the marked fluxes for deletion---
 ggplot(flux.filter, aes(date_time, co2_flux, colour=factor(filter_co2F_roll)))+
@@ -184,6 +193,11 @@ flux.filter[, ':=' (LE_rollmean3 = rollapply(LE, width=(24/0.5)*3, fill=0, FUN=m
 flux.filter[, ':=' (LE_rollmean3_daynight = rollapply(LE, width=(24/0.5)*3, fill=0, FUN=mean, na.rm=TRUE, align="right"),
                               LE_rollsd3_daynight = rollapply(LE, width=(24/0.5)*3, fill=0, FUN=sd, na.rm=TRUE, align="right")),
          by=daytime]
+
+#calculate mean and standard dev for first 3 days fr daytime/nighttime
+flux.filter[1:(((24/0.5)*3-1)*2.5), ':=' (LE_rollmean3_daynight = mean(LE, na.rm=TRUE),
+                                    LE_rollsd3_daynight = sd(LE, na.rm=TRUE)),
+            by=daytime]
 
 
 threshold <- 3
@@ -215,7 +229,7 @@ flux.filter[LE>LE_rollmean3_daynight+threshold*LE_rollsd3_daynight|
 ggplot(flux.filter, aes(date_time, LE, colour=factor(filter_le_roll)))+
   geom_point()
 
-# view the marked fluxes in ~25 day chunks for day/night
+# view the marked fluxes for day/night
 ggplot(flux.filter, aes(date_time, LE, colour=factor(filter_le_roll_daynight)))+
   geom_point()
 
@@ -243,7 +257,7 @@ flux.filter[, ':=' (H_rollmean3_daynight = rollapply(H, width=(24/0.5)*3, fill=0
 
 threshold <- 3
 
-# graph the 3 and 5 day SD ribbons around measured flux.data
+# graph the 3 and 7 day SD ribbons around measured flux.data
 ggplot(flux.filter)+
   geom_line(aes(date_time, H))+
   geom_ribbon(aes(x=date_time, ymin=H_rollmean3-threshold*H_rollsd3, ymax=H_rollmean3+threshold*H_rollsd3), alpha=0.5)+
@@ -256,6 +270,10 @@ ggplot(flux.filter)+
                   ymax=H_rollmean3_daynight+threshold*H_rollsd3_daynight, fill=factor(daytime)), alpha=0.5)+
   facet_grid(daytime~.)
 
+#calculate mean and standard dev for first 3 days fr daytime/nighttime
+flux.filter[1:(((24/0.5)*3-1)*2.5), ':=' (H_rollmean3_daynight = mean(H, na.rm=TRUE),
+                                    H_rollsd3_daynight = sd(H, na.rm=TRUE)),
+            by=daytime]
 
 # mark any H>3*Hrollsd3 (3 day moving SD) for removal
 flux.filter[,filter_h_roll := 0L]
@@ -279,6 +297,30 @@ ggplot(flux.filter, aes(date_time, H, colour=factor(filter_h_roll_daynight)))+
 ggplot(flux.filter[filter_h_roll_daynight==0,], aes(date_time, H, color = factor(filter_h_roll_daynight)))+
   geom_point()
 
+#filter co2 flux, Le, and H using the daytime/nighttime 3 day rolling mean
 
+#########
+########### Filtering DONE ###############
+########### 
+
+# Prior to saving, filter data and remove unnecessary columns
+# c("date_time_orig","TIMESTAMP_START","TIMESTAMP_END","DOY_START","DOY_END","time_diff","SW_IN_POT_AF") 
+# date_time_orig, time_diff and SW_IN_POT_AF probably won't be in files after 2019 because they were used for the timestamp corrections needed prior to 2019
+flux_filter_sd <- copy(flux.filter)
+flux_filter_sd[filter_co2F_roll_daynight!=0, co2_flux := NA]
+flux_filter_sd[filter_h_roll_daynight!=0, H := NA]
+flux_filter_sd[filter_le_roll_daynight!=0, LE := NA]
+
+# check the time period is right: 
+ggplot(flux_filter_sd,aes(date_time, co2_flux))+geom_point()
+summary(flux_filter_sd$date_time)
+
+
+# save to OneDrive
+setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/SmartFlux/")
+
+write.table(flux_filter_sd,
+            file="RedLake_Flux_20211112_20240411_SmartFlux_Output_filtered_sd.csv",sep=",", dec=".",
+            row.names=FALSE)
 
 
