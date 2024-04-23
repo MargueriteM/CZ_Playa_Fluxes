@@ -9,6 +9,7 @@ library(tidyr)
 library(dplyr)
 library(zoo)
 library(plyr)
+library(reshape2)
 
 # get data from summaries folder
 flux.files <- list.files(path="C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries",full.names=TRUE)
@@ -323,4 +324,56 @@ write.table(flux_filter_sd,
             file="RedLake_Flux_20211112_20240411_SmartFlux_Output_filtered_sd.csv",sep=",", dec=".",
             row.names=FALSE)
 
+
+#gapfill data with reddyproc
+#graph by year,month,hour as well
+
+#yearly averages in bar graph format
+flux.data$Year <- year(as.Date(flux.data$date_time, format = "%m/%d/%Y"))
+
+ggplot(flux.data, aes(x = flux.data$Year, y = co2_flux)) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$Year, y = H)) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$Year, y = LE)) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$Year, y = P_RAIN_1_1_1)) +
+  geom_bar(stat = "summary", fun = "mean")
+
+#averages throughout the years by color  
+ggplot(flux.data, aes(x = date_time, y = co2_flux, color = factor(flux.data$Year))) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = date_time, y = H, color = factor(flux.data$Year))) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = date_time, y = LE, color = factor(flux.data$Year))) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = date_time, y = P_RAIN_1_1_1, color = factor(flux.data$Year))) +
+  geom_bar(stat = "summary", fun = "mean")
+
+#average per per month for each year
+flux.data$month <- month(as.Date(flux.data$date_time, format = "%m/%d/%Y"))
+
+ggplot(flux.data, aes(x = flux.data$month, y = co2_flux, color = factor(flux.data$Year))) +
+  geom_line(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$month, y = H, color = factor(flux.data$Year))) +
+  geom_line(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$month, y = LE, color = factor(flux.data$Year))) +
+  geom_line(stat = "summary", fun = "mean")
+
+ggplot(flux.data, aes(x = flux.data$month, y = P_RAIN_1_1_1, color = factor(flux.data$Year))) +
+  geom_line(stat = "summary", fun = "mean")
+
+#daily average per month ????
+flux.data$day <- day(as.Date(flux.data$date_time, format = "%m/%d/%Y"))
+
+ggplot(flux.data, aes(x = flux.data$day, y = P_RAIN_1_1_1)) +
+  geom_line(stat = "summary", fun = "mean")
 
