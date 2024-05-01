@@ -79,7 +79,20 @@ ggplot(flux.day, aes(date, P.day))+
   geom_hline(yintercept = 0)+
   facet_grid(.~year, scales = "free_x")
 
-#Tair
+#graph avg temperature per day
+ggplot(flux.day, aes(date, T.day))+
+  geom_col()+
+  geom_hline(yintercept = 0)+
+  facet_grid(.~year, scales = "free_x")
+
+#precip ad temp in long format and compared throughout years
+P.T.day <- flux.day %>%
+  select(date, T.day, P.day, year)%>%
+  pivot_longer(!c(date, year), names_to="variable",values_to="value")
+
+ggplot(P.T.day, aes(x = date, y = value, color = factor(variable)))+
+  geom_line()+
+  facet_grid(.~year, scales = "free_x")
 
 #soil 
 #long format?
