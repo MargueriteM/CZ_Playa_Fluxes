@@ -57,21 +57,52 @@ flux.month <- flux%>%
   group_by(year, month)%>%
   summarise(T.month = round(mean(TA_C, na.rm = TRUE),2),
             P.month = sum(P_RAIN_1_1_1*1000, na.rm = TRUE))
+
+months <- list("1" = "January",
+               "2" = "February",
+               "3" = "March",
+               "4" = "April",
+               "5" = "May",
+               "6" = "June",
+               "7" = "July",
+               "8" = "August",
+               "9" = "September",
+               "10" = "October",
+               "11" = "November",
+               "12" = "December")
+
+months_labeller <- function(variable,value){
+  return(months[value])
+}
            
 #graph net ecosystem exchange per day  (-values are carbon absorption/+ values are carbon flowing into atmosphere)--  
 #units in umol/m^2/sec
-ggplot(flux.day, aes(date, NEE.day))+
+plot.NEE.day <- ggplot(flux.day, aes(DOY, NEE.day, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-facet_grid(.~year, scales = "free_x")
+facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Daily Avg NEE (μmol C" *O[2]*" "*m^-2* "se" *c^-1*")"),
+       x="Month", col="Year")
 
 #ET in mm per day
-ggplot(flux.day, aes(date, ET.day))+
+plot.ET.day <- ggplot(flux.day, aes(DOY, ET.day, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_grid(.~year, scales = "free_x")
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Daily Sum ET (mm da" *y^-1*")"),
+       x="Month", col="Year")
 
 #graph total precipitation per day in mm
 ggplot(flux.day, aes(date, P.day))+
@@ -87,12 +118,22 @@ ggplot(flux.day, aes(date, T.day))+
 
 #precip ad temp in long format and compared throughout years
 P.T.day <- flux.day %>%
-  select(date, T.day, P.day, year)%>%
-  pivot_longer(!c(date, year), names_to="variable",values_to="value")
+  select(date, T.day, P.day, year, DOY)%>%
+  pivot_longer(!c(date, DOY, year), names_to="variable",values_to="value")
 
-ggplot(P.T.day, aes(x = date, y = value, color = factor(variable)))+
+plot.P.T.day <- ggplot(P.T.day, aes(x = DOY, y = value, color = factor(variable)))+
   geom_line()+
-  facet_grid(.~year, scales = "free_x")
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Air Temp(degC) & Precip(mm)"),
+       x="Month", col="Variable")
+
+#graph daily co2 flux, ET, and precip+temp variables in one figure
+plot_grid(plot.ET.day, plot.NEE.day, plot.P.T.day, nrow=3, align="v")
 
 #soil 
 #long format?
@@ -110,21 +151,22 @@ ggplot(flux.hour, aes(hour, NEE.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month)
+  facet_wrap(.~month, labeller=months_labeller)+
+  labs(col="Year")
 
 #hourly data per month for H
 ggplot(flux.hour, aes(hour, H.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month)
+  facet_wrap(.~month, labeller=months_labeller)
 
 #hourly data per month for LE
 ggplot(flux.hour, aes(hour, LE.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month)
+  facet_wrap(.~month, labeller=months_labeller)
 
 #hourly data per month for Temperature
 ggplot(flux.hour, aes(hour, T.hour, color = factor(year)))+
