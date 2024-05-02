@@ -41,7 +41,12 @@ flux.day <- flux%>%
             S20.day = mean(SWC_1_2_1, na.rm = TRUE),
             S31.day = mean(SWC_1_3_1, na.rm = TRUE),
             S49.day = mean(SWC_1_4_1, na.rm = TRUE),
-            S93.day = mean(SWC_1_5_1, na.rm = TRUE))%>%
+            S93.day = mean(SWC_1_5_1, na.rm = TRUE),
+            TS10.day = mean(TS_1_1_1, na.rm = TRUE),
+            TS20.day = mean(TS_1_2_1, na.rm = TRUE),
+            TS31.day = mean(TS_1_3_1, na.rm = TRUE),
+            TS49.day = mean(TS_1_4_1, na.rm = TRUE),
+            TS93.day = mean(TS_1_5_1, na.rm = TRUE))%>%
   mutate(year = year(date),
          DOY = yday(date))
                            
@@ -77,7 +82,8 @@ months_labeller <- function(variable,value){
            
 #graph net ecosystem exchange per day  (-values are carbon absorption/+ values are carbon flowing into atmosphere)--  
 #units in umol/m^2/sec
-plot.NEE.day <- ggplot(flux.day, aes(DOY, NEE.day, color = factor(year)))+
+plot.NEE.day <- 
+  ggplot(flux.day, aes(DOY, NEE.day, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
@@ -91,7 +97,8 @@ facet_grid(.~year)+
        x="Month", col="Year")
 
 #ET in mm per day
-plot.ET.day <- ggplot(flux.day, aes(DOY, ET.day, color = factor(year)))+
+plot.ET.day <- 
+  ggplot(flux.day, aes(DOY, ET.day, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
@@ -105,23 +112,40 @@ plot.ET.day <- ggplot(flux.day, aes(DOY, ET.day, color = factor(year)))+
        x="Month", col="Year")
 
 #graph total precipitation per day in mm
-ggplot(flux.day, aes(date, P.day))+
-  geom_col()+
+ggplot(flux.day, aes(DOY, P.day, color = factor(year)))+
+  geom_point()+
+  geom_line()+
   geom_hline(yintercept = 0)+
-  facet_grid(.~year, scales = "free_x")
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Daily Avg Precip (mm)"),
+       x="Month", col="Year")
 
 #graph avg temperature per day
-ggplot(flux.day, aes(date, T.day))+
-  geom_col()+
+ggplot(flux.day, aes(DOY, T.day, color = factor(year)))+
+  geom_point()+
+  geom_line()+
   geom_hline(yintercept = 0)+
-  facet_grid(.~year, scales = "free_x")
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Daily Avg Temp (°C)"),
+       x="Month", col="Year")
 
 #precip ad temp in long format and compared throughout years
 P.T.day <- flux.day %>%
   select(date, T.day, P.day, year, DOY)%>%
   pivot_longer(!c(date, DOY, year), names_to="variable",values_to="value")
 
-plot.P.T.day <- ggplot(P.T.day, aes(x = DOY, y = value, color = factor(variable)))+
+plot.P.T.day <- 
+  ggplot(P.T.day, aes(x = DOY, y = value, color = factor(variable)))+
   geom_line()+
   facet_grid(.~year)+
   scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
@@ -129,15 +153,16 @@ plot.P.T.day <- ggplot(P.T.day, aes(x = DOY, y = value, color = factor(variable)
                      minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
                      #guide="axis_minor",
                      expand=c(0,0))+
-  labs(y=expression("Air Temp(degC) & Precip(mm)"),
+  labs(y=expression("Air Temp (°C)"),
        x="Month", col="Variable")
+#+scale_y_continuous(sec.axis = sec_axis(~.,name= "Precip (mm)"))
 
 #graph daily co2 flux, ET, and precip+temp variables in one figure
-plot_grid(plot.ET.day, plot.NEE.day, plot.P.T.day, nrow=3, align="v")
+plot_grid(plot.NEE.day, plot.ET.day, plot.P.T.day, nrow=3, align="v")
 
-#soil 
-#long format?
-ggplot(flux.day, aes(x = date))+
+#soil Heat Plates by depth
+plot.VWC.day <-
+  ggplot(flux.day, aes(x = date))+
   geom_line(aes(y = S10.day), color = "#BCD6E6")+
   geom_line(aes(y = S20.day), color = "#9EBBCC")+
   geom_line(aes(y = S31.day), color = "#8FA9B9")+
@@ -145,6 +170,24 @@ ggplot(flux.day, aes(x = date))+
   geom_line(aes(y = S93.day), color = "#395663")+
   labs(y = "Soil Moisture (m^3/m^3)")
 
+#plot soil T by depth
+plot.TS.day <-
+  ggplot(flux.day, aes(x = date))+
+  geom_line(aes(y = TS10.day), color = "#BCD6E6")+
+  geom_line(aes(y = TS20.day), color = "#9EBBCC")+
+  geom_line(aes(y = TS31.day), color = "#8FA9B9")+
+  geom_line(aes(y = TS49.day), color = "#85A5BE")+
+  geom_line(aes(y = TS93.day), color = "#395663")+
+  labs(y = "Soil Temp (°C)")
+
+
+#Soil VWC, soil T, and precip+temp in one figure
+
+
+###LEGEND MESSES UP THE SCALE EVEN WITHOUT THE SECONDARY AXIS
+
+
+plot_grid(plot.VWC.day, plot.TS.day, plot.P.T.day, nrow=3, align="v")
 
 #hourly data per month for NEE--
 ggplot(flux.hour, aes(hour, NEE.hour, color = factor(year)))+
