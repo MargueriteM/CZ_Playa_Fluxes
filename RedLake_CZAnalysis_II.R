@@ -42,11 +42,11 @@ flux.day <- flux%>%
             S31.day = mean(SWC_1_3_1, na.rm = TRUE),
             S49.day = mean(SWC_1_4_1, na.rm = TRUE),
             S93.day = mean(SWC_1_5_1, na.rm = TRUE),
-            TS10.day = mean(TS_1_1_1, na.rm = TRUE),
-            TS20.day = mean(TS_1_2_1, na.rm = TRUE),
-            TS31.day = mean(TS_1_3_1, na.rm = TRUE),
-            TS49.day = mean(TS_1_4_1, na.rm = TRUE),
-            TS93.day = mean(TS_1_5_1, na.rm = TRUE))%>%
+            TS10.day = mean(TS_1_1_1-272.15, na.rm = TRUE),
+            TS20.day = mean(TS_1_2_1-272.15, na.rm = TRUE),
+            TS31.day = mean(TS_1_3_1-272.15, na.rm = TRUE),
+            TS49.day = mean(TS_1_4_1-272.15, na.rm = TRUE),
+            TS93.day = mean(TS_1_5_1-272.15, na.rm = TRUE))%>%
   mutate(year = year(date),
          DOY = yday(date))
                            
@@ -154,39 +154,49 @@ plot.P.T.day <-
                      #guide="axis_minor",
                      expand=c(0,0))+
   labs(y=expression("Air Temp (°C)"),
-       x="Month", col="Variable")
-#+scale_y_continuous(sec.axis = sec_axis(~.,name= "Precip (mm)"))
+       x="Month", col="Variable")+
+  scale_y_continuous(sec.axis = sec_axis(~.,name= "Precip (mm)"))
 
 #graph daily co2 flux, ET, and precip+temp variables in one figure
 plot_grid(plot.NEE.day, plot.ET.day, plot.P.T.day, nrow=3, align="v")
 
 #soil Heat Plates by depth
 plot.VWC.day <-
-  ggplot(flux.day, aes(x = date))+
+  ggplot(flux.day, aes(x = DOY))+
   geom_line(aes(y = S10.day), color = "#BCD6E6")+
   geom_line(aes(y = S20.day), color = "#9EBBCC")+
   geom_line(aes(y = S31.day), color = "#8FA9B9")+
   geom_line(aes(y = S49.day), color = "#85A5BE")+
   geom_line(aes(y = S93.day), color = "#395663")+
-  labs(y = "Soil Moisture (m^3/m^3)")
+  facet_grid(.~year)+
+    scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                       labels=c("Jan","Jul","Dec"),
+                       minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                       #guide="axis_minor",
+                       expand=c(0,0))+
+    labs(y=expression("Soil Moisture (m^3/m^3)"),
+         x="Month", col="Variable")
+  
 
 #plot soil T by depth
 plot.TS.day <-
-  ggplot(flux.day, aes(x = date))+
+  ggplot(flux.day, aes(x = DOY))+
   geom_line(aes(y = TS10.day), color = "#BCD6E6")+
   geom_line(aes(y = TS20.day), color = "#9EBBCC")+
   geom_line(aes(y = TS31.day), color = "#8FA9B9")+
   geom_line(aes(y = TS49.day), color = "#85A5BE")+
   geom_line(aes(y = TS93.day), color = "#395663")+
-  labs(y = "Soil Temp (°C)")
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Soil Temp (°C)"),
+       x="Month", col="Variable")
 
 
 #Soil VWC, soil T, and precip+temp in one figure
-
-
-###LEGEND MESSES UP THE SCALE EVEN WITHOUT THE SECONDARY AXIS
-
-
 plot_grid(plot.VWC.day, plot.TS.day, plot.P.T.day, nrow=3, align="v")
 
 #hourly data per month for NEE--
