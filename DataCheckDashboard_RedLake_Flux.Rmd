@@ -7,7 +7,7 @@ runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
-# # load flux results data from Smartflux system  
+# # load flux results data from Smartflux system   
 library(tidyr)
 library(dplyr)
 library(ggplot2)
