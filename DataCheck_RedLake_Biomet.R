@@ -19,13 +19,15 @@ library(gridExtra)
 source("~/Desktop/R/R_programs/Functions/plot.windrose.R")
 
 # set working directory to One Drive folder with data (folder belongs to Marguerite Mauritz)
-
-setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
-
+#setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Biomet")
+setwd("Y:/RedLake/CR3000/L1/Biomet")
 
 # read column names and import data
-biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
-biomet <- read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=4, header=FALSE,
+#biomet.head <- colnames(read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=1, header=TRUE))
+#biomet <- read.table("CR3000 Red Lake Remote Connect_Biomet.dat", sep=",", dec=".", skip=4, header=FALSE,
+                     #col.names=biomet.head, na.strings=c("NAN"))
+biomet.head <- colnames(read.table("RedLake_CR3000_Biomet_L1_2025.csv", sep=",", dec=".", skip=1, header=TRUE))
+biomet <- read.table("RedLake_CR3000_Biomet_L1_2025.csv", sep=",", dec=".", skip=4, header=FALSE,
                      col.names=biomet.head, na.strings=c("NAN"))
 
 # see all column names
@@ -43,25 +45,55 @@ biomet.long <- biomet %>%
   pivot_longer(!c(TIMESTAMP,RECORD), names_to="variable",values_to="value") %>%
   mutate(TIMESTAMP = ymd_hms(TIMESTAMP))
 
+max(biomet.long$TIMESTAMP)
+
 # plot battery voltage
 biomet.long %>%
-  filter(str_detect(variable,"^VIN")) %>%
+  filter(str_detect(variable,"^VIN"))%>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
+  labs(x = "Time", y = "Voltage")+
+  facet_grid(variable~., scales="free_y")
+
+# plot battery voltage without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^VIN"), value > -1)%>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  labs(x = "Time", y = "Voltage")+
   facet_grid(variable~., scales="free_y")
 
 # plot atmospheric pressure
 biomet.long %>%
-  filter(str_detect(variable,"^PA")) %>%
+  filter(str_detect(variable,"^PA"))%>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
+  labs(x = "Time", y = "Atmospheric Pressure")+
+  facet_grid(variable~., scales="free_y")
+
+# plot atmospheric pressure without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^PA"), value > -1)%>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  labs(x = "Time", y = "Atmospheric Pressure")+
   facet_grid(variable~., scales="free_y")
 
 # plot all SWC variables
 biomet.long %>%
   filter(str_detect(variable,"^SWC|^P_RAIN")) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  # geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
+
+# plot all SWC variables without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^SWC|^P_RAIN"), value > -1) %>%
 ggplot(., aes(TIMESTAMP, value))+
  # geom_point()+
   geom_line()+
@@ -69,7 +101,15 @@ ggplot(., aes(TIMESTAMP, value))+
 
 # plot all soil temperature and air temperature
 biomet.long %>%
-  filter(str_detect(variable,"^TS|^TA")) %>%
+  filter(str_detect(variable,"^TS|^TA"), value > -1) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  #geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
+
+# plot all soil temperature and air temperature without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^TS|^TA"), value > -1) %>%
   ggplot(., aes(TIMESTAMP, value))+
   #geom_point()+
   geom_line()+
@@ -83,6 +123,13 @@ biomet.long %>%
   geom_line()+
   facet_grid(variable~., scales="free_y")
 
+# plot air temperature and canopy temperature without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^TA|^TC"), value > -10) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
 
 # plot all wind variables
 biomet.long %>%
@@ -92,9 +139,16 @@ biomet.long %>%
   geom_line()+
   facet_grid(variable~., scales="free_y")
 
+# plot all wind variables witout -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^WD|^WS|^MWS"), value > -1) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
+
 # plot wind variables in windrose
 plot.windrose(biomet,biomet$WS_16_33_1_1_1,biomet$WD_20_35_1_1_1)
-
 
 # plot PAR and air temperature
 biomet.long %>%
@@ -104,11 +158,19 @@ biomet.long %>%
   geom_line()+
   facet_grid(variable~., scales="free_y")
 
+# plot PAR and air temperature without -9999 values
+biomet.long %>%
+  filter(str_detect(variable,"^PPFD|^TA"), value > -1) %>%
+  ggplot(., aes(TIMESTAMP, value))+
+  geom_point()+
+  geom_line()+
+  facet_grid(variable~., scales="free_y")
+
 # plot radiation components
 #"SWIN_10_6_1_1_1"   "SWOUT_11_6_1_1_1"  "LWIN_14_6_1_1_1"   "LWOUT_15_6_1_1_1" 
 # [11] "RN_5_6_1_1_1"      "RN_4_6_1_1_1"      "ALB_26_99_1_1_1" 
 biomet.long %>%
-  filter(str_detect(variable,"^SWIN|^SWOUT|^LWIN|^LWOUT|^RN|^RG|^ALB|^PPFD")) %>%
+  filter(str_detect(variable,"^SWIN|^SWOUT|^LWIN|^LWOUT|^RN|^RG|^ALB|^PPFD")&value>(-9999)) %>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
@@ -146,7 +208,7 @@ ggplot(biomet, aes(SWIN_6_10_1_1_1,PPFD_7_21_1_1_1*0.327))+
 
 # plot soil heat flux
 biomet.long %>%
-  filter(str_detect(variable,"^SHF")) %>%
+  filter(str_detect(variable,"^SHF"), value > -1) %>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
@@ -154,8 +216,9 @@ biomet.long %>%
 
 # precipitation, relative humidity, leaf wetness
 biomet.long %>%
-  filter(str_detect(variable,"^P_RAIN|^RH|^LWS")) %>%
+  filter(str_detect(variable,"^P_RAIN|^RH|^LWS"), value > -1) %>%
   ggplot(., aes(TIMESTAMP, value))+
   geom_point()+
   geom_line()+
   facet_grid(variable~., scales="free_y")
+
