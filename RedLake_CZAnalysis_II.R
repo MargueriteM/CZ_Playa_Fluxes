@@ -20,7 +20,7 @@ setwd("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data
 flux <- read.csv("RedLake_Flux_20211112_20240411_SmartFlux_Output_filtered_sd.csv", header = TRUE)
 
 flux <-flux%>%
-  mutate(date_time=ymd_hms(paste(date,time,sep=" ")),
+  mutate(date_time = ymd_hms(paste(date,time,sep = " ")),
          date = ymd(date),
          year = year(date),
          month = month(date),
@@ -49,14 +49,16 @@ flux.day <- flux%>%
             TS93.day = mean(TS_1_5_1-272.15, na.rm = TRUE))%>%
   mutate(year = year(date),
          DOY = yday(date))
+  
                            
 #create hourly summary by month
 flux.hour <- flux%>%
   group_by(year, month, hour)%>%
   summarise(NEE.hour = mean(co2_flux, na.rm = TRUE),
             H.hour = mean(H, na.rm = TRUE),
-            T.hour = mean((TA_1_1_1-272.15), na.rm = TRUE)) #convert Kelvin to Celsius
-
+            T.hour = mean((TA_1_1_1-272.15), na.rm = TRUE), #convert Kelvin to Celsius
+            LE.hour = mean(LE, na.rm = TRUE))
+            
 #create monthly summary
 flux.month <- flux%>%
   group_by(year, month)%>%
@@ -139,6 +141,21 @@ ggplot(flux.day, aes(DOY, T.day, color = factor(year)))+
   labs(y=expression("Daily Avg Temp (°C)"),
        x="Month", col="Year")
 
+#H per day in W/m^2
+#plot.H.day <- 
+  ggplot(flux.day, aes(DOY, H.day, color = factor(year)))+
+  geom_point()+
+  geom_line()+
+  geom_hline(yintercept = 0)+
+  facet_grid(.~year)+
+  scale_x_continuous(breaks =c(31,211,361),limits=c(1,367),
+                     labels=c("Jan","Jul","Dec"),
+                     minor_breaks =c(31,61,91,121,151,181,211,241,271,301,331,361),
+                     #guide="axis_minor",
+                     expand=c(0,0))+
+  labs(y=expression("Daily Sum H (W/m^2)"),
+       x="Month", col="Year")
+
 #precip ad temp in long format and compared throughout years
 P.T.day <- flux.day %>%
   select(date, T.day, P.day, year, DOY)%>%
@@ -160,7 +177,7 @@ plot.P.T.day <-
 #graph daily co2 flux, ET, and precip+temp variables in one figure
 plot_grid(plot.NEE.day, plot.ET.day, plot.P.T.day, nrow=3, align="v")
 
-#soil Heat Plates by depth
+#soil Moisture Probes by depth
 plot.VWC.day <-
   ggplot(flux.day, aes(x = DOY))+
   geom_line(aes(y = S10.day), color = "#BCD6E6")+
@@ -205,28 +222,31 @@ ggplot(flux.hour, aes(hour, NEE.hour, color = factor(year)))+
   geom_line()+
   geom_hline(yintercept = 0)+
   facet_wrap(.~month, labeller=months_labeller)+
-  labs(col="Year")
+  labs(y=expression("Hourly Avg NEE (μmol C" *O[2]*" "*m^-2* "se" *c^-1*")"), col="Year")
 
 #hourly data per month for H
 ggplot(flux.hour, aes(hour, H.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month, labeller=months_labeller)
+  facet_wrap(.~month, labeller=months_labeller)+
+  labs(col="Year")
 
 #hourly data per month for LE
 ggplot(flux.hour, aes(hour, LE.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month, labeller=months_labeller)
+  facet_wrap(.~month, labeller=months_labeller)+
+  labs(col="Year")
 
 #hourly data per month for Temperature
 ggplot(flux.hour, aes(hour, T.hour, color = factor(year)))+
   geom_point()+
   geom_line()+
   geom_hline(yintercept = 0)+
-  facet_wrap(.~month)
+  facet_wrap(.~month)+
+  labs(col="Year")
 
 #Monthly Temp and Precip 
 plot.T <- ggplot(flux.month, aes(month, T.month, color = factor(year)))+
@@ -247,4 +267,4 @@ plot.P <- ggplot(flux.month, aes(month, P.month, fill = factor(year)))+
 plot_grid(plot.T, plot.P, nrow = 2, align = "v")
 
 #gapfill data with reddyproc
-#graph by year,month,hour as well
+

@@ -34,26 +34,61 @@ data4 <- ldply(flux.files[314:500], read_column_number)
 
 data5 <- ldply(flux.files[500:727], read_column_number)
 
-data6 <- ldply(flux.files[727:861], read_column_number)
+data6 <- ldply(flux.files[727:914], read_column_number)
+
+# issue with files between 914-921 (zero KB files)
+data7 <- ldply(flux.files[921:1205], read_column_number)
 
 # read the flux files as csv and combine into single dataframe
 
-data <- rbind(data1, data2, data3, data4, data5, data6)
+data <- rbind(data1, data2, data3, data4, data5, data6, data7)
 
-# general column number is 211, select files
+# # general column number is 211, select files
+# flux.files.read <- data %>%
+#   filter(colnumber==211) %>%
+#   mutate(file.path = paste("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
+#                            file,".txt",sep=''))
+#
+# # get column names and units from complete summary files
+# flux.units <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
+# 
+# # get data from complete summary files
+# flux.data <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units)))
+# 
+# flux.data <-flux.data%>%
+#   mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
+
+## 10 Oct 2024 updated smartflux to collect all variables which increased columns from 211 to 215, add 215 to filter
 flux.files.read <- data %>%
-  filter(colnumber==211) %>%
+  filter(colnumber==211|colnumber==215) %>%
   mutate(file.path = paste("C:/Users/vmartinez62/OneDrive - University of Texas at El Paso/Tower Data/JER_Playa/Data/Data_DL_Collect/SmartFlux/summaries/",
                            file,".txt",sep=''))
 
+flux.units <- fread(flux.files.read[flux.files.read$colnumber==211,]$file.path[1], sep="\t", dec=".", header=TRUE, skip=0, fill = TRUE)[1,]
+
+flux.data <- do.call("rbind", lapply(flux.files.read[flux.files.read$colnumber==211,]$file.path, header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units)))
+
+# format date_time variable
+flux.data <- flux.data %>%
+  mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
+
+# 10 Oct 2024 updated smartflux to collect all variables which increased columns from 211 to 215 read all files with 215 columns seperately
 # get column names and units from complete summary files
-flux.units <- fread(flux.files.read$file.path[1], sep="\t", dec=".", header=TRUE, skip=0)[1,]
+flux.units.av <- fread( flux.files.read[flux.files.read$colnumber==215,]$file.path[2], sep="\t", dec=".", header=TRUE, skip=0, fill = TRUE)[1,]
 
 # get data from complete summary files
-flux.data <- do.call("rbind", lapply(flux.files.read$file.path, header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units)))
+#flux.data2.av <- do.call("rbind", lapply(flux.files.read$file.path[908:nrow(flux.files.read)], header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units2.av)))
+# count total number of files with 215 columns of data,
+nrow.215 <- nrow(flux.files.read[flux.files.read$colnumber==215,])
+flux.data.av <- do.call("rbind", lapply(flux.files.read[flux.files.read$colnumber==215,]$file.path[2:nrow.215], header = FALSE, fread, sep="\t", dec=".",skip = 2, fill=TRUE, na.strings="NaN", col.names=colnames(flux.units.av)))
 
-flux.data <-flux.data%>%
+# format date_time variable
+flux.data.av <- flux.data.av %>%
   mutate(date_time=ymd_hms(paste(date,time,sep=" ")))
+
+# combine 211 column flux file with 215 row flux file
+flux.data <- rbind(flux.data, flux.data.av, fill=TRUE)
+
 
 # MM edit 9 April: 
 # Steps to add:
@@ -73,7 +108,6 @@ ggplot(flux.data, aes(date_time, co2_signal_strength_7500_mean))+
 
 # case_when to make the CO2 flux, LE, H ~NA for qc code <2
 
-#eg: (creating test object just to make sure code works... when it does, can replace test with flux.data)
 # co2 flux by qc code
 flux.filter <- flux.data %>%
   mutate(co2_flux = case_when(qc_co2_flux>1 ~ NA, 
@@ -371,7 +405,7 @@ ggplot(flux.data, aes(x = flux.data$month, y = LE, color = factor(flux.data$Year
 ggplot(flux.data, aes(x = flux.data$month, y = P_RAIN_1_1_1, color = factor(flux.data$Year))) +
   geom_line(stat = "summary", fun = "mean")
 
-#daily average per month ????
+#daily average rain per month 
 flux.data$day <- day(as.Date(flux.data$date_time, format = "%m/%d/%Y"))
 
 ggplot(flux.data, aes(x = flux.data$day, y = P_RAIN_1_1_1)) +
